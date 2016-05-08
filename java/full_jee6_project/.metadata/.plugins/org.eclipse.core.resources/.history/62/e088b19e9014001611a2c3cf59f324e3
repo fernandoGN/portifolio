@@ -1,0 +1,77 @@
+package br.gov.ce.sefaz.project.entities;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="MUNICIPIO",schema="SETA")
+public class Municipio implements Serializable{
+    
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 6590421716222472060L;
+
+    @Id
+    @Column(name = "COD_MUNICIPIO")
+    private Long codMunicipio;
+    
+    @Column(name="DSC_MUNICIPIO")
+    private String dscMunicipio;
+    
+    @OneToOne
+    @JoinColumn(name="COD_UF")
+    private UnidadeFederativa unidadeFederativa;
+
+	/**
+	 * @return the codMunicipio
+	 */
+	public Long getCodMunicipio() {
+		return codMunicipio;
+	}
+
+	/**
+	 * @param codMunicipio 
+	 * 				the codMunicipio to set
+	 */
+	public void setCodMunicipio(Long codMunicipio) {
+		this.codMunicipio = codMunicipio;
+	}
+
+	/**
+	 * @return the dscMunicipio
+	 */
+	public String getDscMunicipio() {
+		return dscMunicipio;
+	}
+
+	/**
+	 * @param dscMunicipio 
+	 * 				the dscMunicipio to set
+	 */
+	public void setDscMunicipio(String dscMunicipio) {
+		this.dscMunicipio = dscMunicipio;
+	}
+
+	/**
+	 * @return the unidadeFederativa
+	 */
+	public UnidadeFederativa getUnidadeFederativa() {
+		return unidadeFederativa;
+	}
+
+	/**
+	 * @param unidadeFederativa 
+	 * 				the unidadeFederativa to set
+	 */
+	public void setUnidadeFederativa(UnidadeFederativa unidadeFederativa) {
+		this.unidadeFederativa = unidadeFederativa;
+	}
+    
+}

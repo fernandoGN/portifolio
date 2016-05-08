@@ -1,0 +1,29 @@
+/**
+ * Criado por 006157C6 em 03/04/2013
+ */
+package br.com.devnagui.project.enums;
+
+/**
+ * Criado por @author 006157C6 em 03/04/2013
+ * 
+ */
+public enum TipoSituacaoContribuinte {
+
+	SITUACAO_ATIVA(1), SITUACAO_ATIVA_EM_EDITAL(8);
+
+	private int codigoSituacao = 0;
+
+	/**
+	 * 
+	 */
+	private TipoSituacaoContribuinte(final int codSituacao) {
+		this.codigoSituacao = codSituacao;
+	}
+
+	/**
+	 * @return the codigoSituacao
+	 */
+	public Integer getCodigoSituacao() {
+		return codigoSituacao;
+	}
+}

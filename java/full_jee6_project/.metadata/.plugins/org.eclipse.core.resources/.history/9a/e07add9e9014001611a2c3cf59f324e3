@@ -1,0 +1,18 @@
+package br.gov.ce.sefaz.project.manager;
+
+import java.util.List;
+
+import br.gov.ce.sefaz.project.entities.Contribuinte;
+import br.gov.ce.sefaz.project.entities.ImportacaoDadosAnp;
+import br.gov.ce.sefaz.project.manager.exception.BusinessException;
+
+public interface ImportacaoDadosAnpManager extends GenericoManager<ImportacaoDadosAnp> {
+	
+	public List<Contribuinte> compararDadosAnpComDadosSefaz(List<Contribuinte> contribuintesAnp, boolean verificarPostoAtivoSefaz) throws BusinessException;
+	
+	public void salvarAlteracoes(List<Contribuinte> contribuintes) throws BusinessException;
+	
+	public ImportacaoDadosAnp contultarUltimaImportacao();
+	
+
+}

@@ -1,0 +1,344 @@
+package br.gov.ce.sefaz.project.manager.impl;
+
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+import org.joda.time.Duration;
+import org.joda.time.PeriodType;
+
+import br.gov.ce.sefaz.project.entities.ItemNFEEntrada;
+import br.gov.ce.sefaz.project.entities.NFEEntrada;
+import br.gov.ce.sefaz.project.entities.Visita;
+import br.gov.ce.sefaz.project.entities.VisitaNfe;
+import br.gov.ce.sefaz.project.enums.SituacaoNFE;
+import br.gov.ce.sefaz.project.enums.SituacaoRegistroItem;
+import br.gov.ce.sefaz.project.enums.SituacaoRegistroNFE;
+import br.gov.ce.sefaz.project.manager.GenericoManager;
+import br.gov.ce.sefaz.project.manager.NotaFiscalEletronicaManager;
+import br.gov.ce.sefaz.project.manager.VisitaNfeManager;
+import br.gov.ce.sefaz.project.manager.exception.BusinessException;
+import br.gov.ce.sefaz.project.webservices.consultanfe.adapter.ItemNFEAdapter;
+import br.gov.ce.sefaz.project.webservices.consultanfe.adapter.NFEAdapter;
+import br.gov.ce.sefaz.project.webservices.consultanfe.facade.ConsultarNfeFacade;
+import br.gov.ce.sefaz.nfecorp.ws.consultas.nfe.RetNfe;
+
+@Stateless
+public class NotaFiscalEletronicaManagerBean extends GenericoManagerBean<NFEEntrada> implements NotaFiscalEletronicaManager {
+    
+    /** =======================================ATRIBUTOS================================================================ **/
+
+    /**
+     * Serial uid.
+     */
+    private static final long serialVersionUID = -8977187971682831409L;
+    private static final Logger LOG = Logger.getLogger(NotaFiscalEletronicaManagerBean.class);
+
+    private static final int NUMERO_CFOP_MINIMO = 5000;
+    private static final int PRAZO_EM_DIAS_PARA_NOTA_VALIDA = 7;
+    private static final int NUMERO_MUTIPLICADOR_CICLO_ROTA = 2;
+    private static final int NUMERO_MINIMO_CARACTERES_CHAVE_ACESSO_NFE = 44;
+    private static final int CODIGO_PROCESSAMENTO_NFE_SUCESSO = 100;
+
+    @Inject
+    private ConsultarNfeFacade consultarNfeFacade;
+    @Inject
+    @Named("genericoManager")
+    private GenericoManager<ItemNFEEntrada> itemNFEManager;
+    
+    @EJB VisitaNfeManager visitaNfeManager;
+    
+    /** =======================================METODOS PUBLICOS================================================================ **/
+
+    @Override
+    public NFEAdapter consultarNFECorpPelaChaveAcesso(final Visita visitaAtual, final String chaveAcesso) throws BusinessException {
+        LOG.info("Iniciando metodo de consulta de NFe.");
+
+        validarChaveAcessoNFE(chaveAcesso);
+        NFEAdapter nfeRetornada = null;
+        
+        //FIXME Nathan - descobrir aonde vai ficar o status da nfe e retirar a enum SituacaoRegistroItem
+        RetNfe retNfe = consultarNfeFacade.consultarNfePorChaveAcesso(chaveAcesso);
+        if (retNfe.getNfe().getChaveAcesso()==null) {
+            nfeRetornada = obterNFERegistradaManualmenteNovaOuDoBanco(chaveAcesso);
+        } else {
+            nfeRetornada = new NFEAdapter(retNfe);
+            LOG.info("NFe retornada: " + nfeRetornada.toString());
+            // Comecando com o status ok.
+            validarNotaFiscalDoNFECorp(visitaAtual, nfeRetornada);
+        }
+
+        ajustarItensUsadosDaNFE(visitaAtual,nfeRetornada);
+        LOG.info("Finalizando metodo de consulta de NFe.");
+
+        if(nfeRetornada.getSituacao().equals(1) || nfeRetornada.getSituacao().equals(2) || nfeRetornada.getSituacao().equals(3) || nfeRetornada.getSituacao().equals(4)) {
+        	nfeRetornada.setStyle("red");
+        }
+        
+        return nfeRetornada;
+    }
+
+    @Override
+    public void verificarItemNFeManualJaCadastrado(List<NFEAdapter> nfeServicos, ItemNFEAdapter itemNFE4RegistroManualAlteadoOuNovo) throws BusinessException {
+
+        //Verificando se a nfe ja existe na base e caso ja exista se o item ja foi registrado.
+        
+        NFEEntrada nFERegistradaManualmenteBD = obterNotaFiscalPorChaveDeAcesso(itemNFE4RegistroManualAlteadoOuNovo.getChaveNFE());
+        if(nFERegistradaManualmenteBD!=null){
+            for(ItemNFEEntrada itemNFEEntradaBD:nFERegistradaManualmenteBD.getItensInformados()){
+                if (!itemNFE4RegistroManualAlteadoOuNovo.isAlterar()
+                        && itemNFEEntradaBD.getNumItemNFE().equals(
+                           itemNFE4RegistroManualAlteadoOuNovo.getNumeroItem())
+                        && !(itemNFE4RegistroManualAlteadoOuNovo.getNumeroItem().equals(itemNFE4RegistroManualAlteadoOuNovo.getNumItemAnterior()))) {
+                    throw new BusinessException("msg.visita.nfe.item.inserido.manualmente.ja.cadastrado");
+                }
+            }
+        }
+        //Temos que verificar tambem as nfes informadas atualmente, se existir um item para uma nfe que tenha o mesmo "numero de item" e o mesmo seja diferente
+        // do meu numero de item anterior..significa que estou alterando para um item que já existe...paawww..
+        for (NFEAdapter nfeInformadaAtual : nfeServicos) {
+            if (nfeInformadaAtual.getChaveAcessoNFE().equals(itemNFE4RegistroManualAlteadoOuNovo.getChaveNFE())) {
+                for (ItemNFEAdapter itemDaNotaInformadaAtual : nfeInformadaAtual.getItensDaNotaFiscal()) {
+                    if(itemDaNotaInformadaAtual.getNumeroItem().equals(itemNFE4RegistroManualAlteadoOuNovo.getNumeroItem())
+                    && itemNFE4RegistroManualAlteadoOuNovo.isAlterar() 
+                    && !itemDaNotaInformadaAtual.getNumeroItem().equals(itemNFE4RegistroManualAlteadoOuNovo.getNumItemAnterior())){
+                        throw new BusinessException("msg.visita.nfe.item.inserido.manualmente.ja.cadastrado");
+                    }
+                }
+            }
+        }
+
+    }
+    
+    /** 
+     * Este metodo complementa o salvamento da visita na aba de NFEs, com o salvamento dos itens e respectivas notas.
+     */
+    @Override
+    public void salvarItensComNotaFiscal(Visita visitaAtual) throws BusinessException {
+        LOG.info("Iniciando metodo para salvar itens com nfe.");
+        Map<String,NFEEntrada> mapaDeNotas = new HashMap<String,NFEEntrada>();
+        
+        for (Iterator<ItemNFEEntrada> iterator = visitaAtual.getItensDaNotaFiscal().iterator(); iterator.hasNext();) {
+            ItemNFEEntrada itemNFEEntradaAtual = iterator.next();
+            itemNFEEntradaAtual.setVisita(visitaAtual);
+            mapaDeNotas.put(itemNFEEntradaAtual.getNotaFiscal().getCodAcesso(), itemNFEEntradaAtual.getNotaFiscal());
+        }
+        
+        //Salva as notas (SEM OS ITENS)
+        for (NFEEntrada nfeEntrada : mapaDeNotas.values()) {
+            nfeEntrada=alterar(nfeEntrada);
+            mapaDeNotas.put(nfeEntrada.getCodAcesso(),nfeEntrada);
+            nfeEntrada.getItensInformados().clear();
+        }
+        //Salva os itens 
+        for (Iterator<ItemNFEEntrada> iterator = visitaAtual.getItensDaNotaFiscal().iterator(); iterator.hasNext();) {
+            ItemNFEEntrada itemNFEEntradaAtual = iterator.next();
+            NFEEntrada nfeEntrada = mapaDeNotas.get(itemNFEEntradaAtual.getNotaFiscal().getCodAcesso());
+            //Ajusta a nota fiscal atualizada, se for nova estará com o id.
+            itemNFEEntradaAtual.setNotaFiscal(nfeEntrada);
+            //Salva ou altera os itens.
+            if (itemNFEEntradaAtual.getId()==null) {
+                itemNFEManager.inserir(itemNFEEntradaAtual);
+            }else{
+                itemNFEEntradaAtual =itemNFEManager.alterar(itemNFEEntradaAtual);
+            }
+            nfeEntrada.getItensInformados().add(itemNFEEntradaAtual);
+        }
+        
+        limparVisitasNfePorIdVisita(visitaAtual.getId());
+        
+        for (NFEEntrada nfeEntrada : mapaDeNotas.values()) {
+        	inicializarObjetoOuColecao(nfeEntrada);
+        	VisitaNfe visitaNfe = new VisitaNfe();
+        	visitaNfe.setNfeEntrada(nfeEntrada);
+        	visitaNfe.setVisita(visitaAtual);
+        	visitaNfe.setSituacaoVisita(visitaAtual.getSituacaoVisita());
+        	ItemNFEEntrada itemInformado = nfeEntrada.getItensInformados().iterator().next();
+            if(SituacaoRegistroItem.INFORMADO_MANUALMENTE.equals(itemInformado.getSituacaoItem())) {
+        		visitaNfe.setSituacaoVisitaNfe(SituacaoRegistroNFE.INFORMADA_MANUALMENTE);
+        	} else {
+        		visitaNfe.setSituacaoVisitaNfe(SituacaoRegistroNFE.IMPORTADA_NFECORP);
+        	}
+        	visitaNfeManager.inserir(visitaNfe);
+        }
+
+        LOG.info("Finalizando metodo para salvar itens com nfe.");
+
+     }
+ 
+	public NFEEntrada obterNotaFiscalPorChaveDeAcesso(String chaveAcesso) {
+        TypedQuery<NFEEntrada> query = getEntityManager().createNamedQuery(NFEEntrada.QUERY_OBTER_NOTAS_FISCAIS_POR_CHAVE_ACESSO, NFEEntrada.class);
+        query.setParameter("codChaveAcesso", chaveAcesso);
+        NFEEntrada nfeEntrada=null;
+        try {
+            nfeEntrada = query.getSingleResult();
+        } catch (NoResultException noResultException) {
+            LOG.error("Erro de negocio, logado apenas por precaucao.",noResultException);
+            
+        }
+        return nfeEntrada;
+    }
+    
+    public void validarNotaFiscalDoNFECorp(final Visita visitaAtual, NFEAdapter nfeRetornada) {
+        LOG.info("Iniciando validacao de nota fiscal.");
+        
+        LOG.info("Visita "+visitaAtual.getId()+ " / NFe a ser validada: "+nfeRetornada.getChaveAcessoNFE());
+        nfeRetornada.setSituacao(SituacaoNFE.OK);
+
+        if (!visitaAtual.getPostoCombustivel().getContribuinte().getCnpj().equals(nfeRetornada.getCNPJDestinatario())) {
+            LOG.info("msg.visita.consultanfe.destinatarioDiferenteDoPosto");
+            nfeRetornada.setSituacao(SituacaoNFE.DESTINATARIO_NAO_CONFERE);
+        } else if (nfeRetornada.getStatusProcessamentoNFE() != CODIGO_PROCESSAMENTO_NFE_SUCESSO) {
+            LOG.info("msg.visita.consultanfe.codProcessamentoInvalido");
+            nfeRetornada.setSituacao(SituacaoNFE.NAO_AUTORIZADA);
+        } else if (nfeRetornada.getCFOP() < NUMERO_CFOP_MINIMO) {
+            LOG.info("CFOP Invalido!");
+            nfeRetornada.setSituacao(SituacaoNFE.CFOP_INVALIDO);
+        } else if (nfeRetornada.getDataEmissaoNFE().before(new Date())) {
+            // A data de emissao eh maior que 7 dias --da data de hj(sem
+            // especificao)--?
+            Duration duration = new Duration(new Date().getTime() - nfeRetornada.getDataEmissaoNFE().getTime());
+            int diasDeDiferencaDaNFEParaDataAtual = duration.toDuration().toPeriod(PeriodType.days()).getDays();
+            Integer duracaoCicloRota = visitaAtual.getRoteiro().getRotaVersao().getDuracao();
+            LOG.info("Quantidade de dias da data de emissao da NFe: "+diasDeDiferencaDaNFEParaDataAtual);
+            // Se a data ainda for maior que o 7 dias e maior que o dobro da
+            // duracao do ciclo da rota, entao esta invalida pelo prazo =)
+            if ((diasDeDiferencaDaNFEParaDataAtual > PRAZO_EM_DIAS_PARA_NOTA_VALIDA)
+                    && diasDeDiferencaDaNFEParaDataAtual > (duracaoCicloRota * NUMERO_MUTIPLICADOR_CICLO_ROTA)) {
+                LOG.info("Rota invalida por prazo expirado.");
+                nfeRetornada.setSituacao(SituacaoNFE.PRAZO_EXPIRADO);
+            }
+        }
+    }
+    
+    /** =======================================METODOS PRIVADOS================================================================ **/
+    
+    @Override
+    public void limparItensDaVisita(Long idVisita) {
+        Query deleteItensQuery = getEntityManager().createNamedQuery(ItemNFEEntrada.QUERY_DELETAR_ITENS_NOTA_FISCAL_POR_VISITA);
+        deleteItensQuery.setParameter("idVisita", idVisita);
+        deleteItensQuery.executeUpdate();
+    }
+   
+    private NFEAdapter obterNFERegistradaManualmenteNovaOuDoBanco(String chaveAcesso) {
+        LOG.info("Iniciando metodo de consulta de NFEEntrada manualmente");
+        // Procurar NFE com chave de acesso.
+        // Carrega os itens dela.
+        // Parser dos NFEEntrada - > NFEAdapter (Com os itens...)
+        NFEAdapter retorno = null;
+        try {
+            NFEEntrada nfeEntrada = obterNotaFiscalPorChaveDeAcesso(chaveAcesso);
+            if(nfeEntrada==null){
+                //Nfe Nova
+                retorno = new NFEAdapter(chaveAcesso);
+            }else{
+                //NFe Já cadastrada.
+                retorno = new NFEAdapter(nfeEntrada);
+            }
+        } catch (NoResultException e) {
+            LOG.error("Erro de negocio, NFe nao encontrada na base local, logando apenas por precaucao." , e);
+            retorno = new NFEAdapter(chaveAcesso);
+            //Essa variavel booleana indica que a nfe nao existe no project ou nfecorp.
+            retorno.setIsNotaNaoInformada(true);
+        }
+        retorno.setSituacao(SituacaoNFE.REGISTRO_MANUAL);
+        LOG.info("Finalizando metodo de consulta de NFEEntrada manualmente");
+        return retorno;
+    }
+
+   
+
+
+    private void validarChaveAcessoNFE(final String chaveAcesso) throws BusinessException {
+        LOG.info("Iniciando validacao da chave de acesso da NFE.");
+        
+        if (chaveAcesso.length() != NUMERO_MINIMO_CARACTERES_CHAVE_ACESSO_NFE) {
+            throw new BusinessException("msg.visita.consultanfe.chaveInvalida");
+        }
+        try {
+            BigInteger bigInteger = new BigInteger(chaveAcesso);
+        } catch (NumberFormatException e) {
+            LOG.error(e.getMessage(), e);
+            throw new BusinessException("msg.visita.consultanfe.chaveInvalida", e);
+        }
+        if (!validarDigitoVerificadorChaveAcesso(chaveAcesso)) {
+            throw new BusinessException("msg.visita.consultanfe.chaveInvalida");
+        }
+        LOG.info("Finalizando validacao da chave de acesso da NFE.");
+
+    }
+
+    private void ajustarItensUsadosDaNFE(Visita visitaAtual, NFEAdapter nfeRetornada) {
+        LOG.info("Verificando itens usados da nota fiscal.");
+
+        TypedQuery<ItemNFEEntrada> typedQuery = getEntityManager().createNamedQuery(ItemNFEEntrada.QUERY_OBTER_ITENS_DA_NOTA, ItemNFEEntrada.class);
+        typedQuery.setParameter("codAcesso", nfeRetornada.getChaveAcessoNFE());
+        List<ItemNFEEntrada> itensDaNotaUsados = typedQuery.getResultList();
+        
+
+        if (!itensDaNotaUsados.isEmpty()) {
+            HashMap<Long, ItemNFEAdapter> itensDaNotaAtual4Comparacao = new HashMap<Long, ItemNFEAdapter>();
+            // hashmap criado apenas para agiliar as buscas em cima do numero do
+            // item.(melhor que realizar 2 fors, acredito)
+            for (ItemNFEAdapter itemDaNotaAtualAdapter : nfeRetornada.getItensDaNotaFiscal()) {
+                itensDaNotaAtual4Comparacao.put(itemDaNotaAtualAdapter.getNumeroItem().longValue(), itemDaNotaAtualAdapter);
+            }
+            LOG.info("Existem itens da nota fiscal que já foram usados, marcando-os como usados. Numeros dos itens: " + itensDaNotaAtual4Comparacao.keySet());
+            for (ItemNFEEntrada itemUsadoBD : itensDaNotaUsados) {
+                ItemNFEAdapter itemNFEUsadoAdapter = itensDaNotaAtual4Comparacao.get(itemUsadoBD.getNumItemNFE());
+                if (itemNFEUsadoAdapter != null) {
+                    itemNFEUsadoAdapter.setItemUsado(true);
+                    itemNFEUsadoAdapter.setProdutoCombustivel(itemUsadoBD.getProdutoCombustivel());
+                    if(itemUsadoBD.getVisita().getId().equals(visitaAtual.getId())){
+                        itemNFEUsadoAdapter.setItemEscolhido(true);
+                        itemNFEUsadoAdapter.setItemUsado(false);
+                    }
+                }
+              
+            }
+        }
+
+    }
+
+    private boolean validarDigitoVerificadorChaveAcesso(String numero) {
+        boolean retorno = false;
+        String dv = numero.substring(numero.length() - 1);
+        String numeroSemDigito = numero.substring(0, numero.length() - 1);
+        String dvTmp = calculaDigitoVerificadorBase11(numeroSemDigito, 2, 9);
+        retorno = dv.equals(dvTmp);
+        return retorno;
+    }
+
+    private String calculaDigitoVerificadorBase11(String numero, int ini, int fim) {
+        int ponderado = 0;
+        int peso = 2;
+        int soma = 0;
+        for (int x = numero.length() - 1; x >= 0; x--) {
+            ponderado = Integer.parseInt(numero.charAt(x) + "") * peso;
+            soma += ponderado;
+            peso = peso == fim ? ini : peso + 1;
+        }
+        int resto = soma % 11;
+        return (resto < 2 ? 0 : 11 - resto) + "";
+    }
+    
+    private void limparVisitasNfePorIdVisita(Long idVisita) {
+    	Query query = getEntityManager().createNamedQuery(VisitaNfe.QUERY_REMOVER_VISITAS_NFE_POR_ID_VISITA);
+    	query.setParameter("idVisita", idVisita);
+    	query.executeUpdate();
+	}
+
+
+}

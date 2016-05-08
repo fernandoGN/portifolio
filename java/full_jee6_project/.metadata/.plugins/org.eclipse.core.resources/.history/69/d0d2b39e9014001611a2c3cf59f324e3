@@ -1,0 +1,14 @@
+/**
+ * 
+ */
+package br.gov.ce.sefaz.project.entities;
+
+import java.io.Serializable;
+
+/**
+ * @author 006157C6
+ *
+ */
+public class Parametro implements Serializable {
+
+}

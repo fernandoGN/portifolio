@@ -1,0 +1,13 @@
+package br.com.devnagui.project.user;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class UserBusinessEJBTest {
+
+	@Test
+	public void test() {
+	}
+
+}

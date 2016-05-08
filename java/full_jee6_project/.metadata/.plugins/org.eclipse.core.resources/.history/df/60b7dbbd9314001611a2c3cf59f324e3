@@ -1,0 +1,222 @@
+package br.gov.ce.project.manager.posto.importaranp;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+
+import junit.framework.Assert;
+
+import org.apache.log4j.Logger;
+import org.dbunit.database.QueryDataSet;
+import org.dbunit.operation.DatabaseOperation;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.database.annotations.TestDataSource;
+import org.unitils.dbunit.annotation.DataSet;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.com.devnagui.project.entities.Contribuinte;
+import br.com.devnagui.project.entities.ImportacaoDadosAnp;
+import br.com.devnagui.project.entities.PostoCombustivel;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.manager.impl.BandeiraPostoManagerBean;
+import br.com.devnagui.project.manager.impl.ContribuinteManagerBean;
+import br.com.devnagui.project.manager.impl.ImportacaoDadosAnpManagerBean;
+import br.com.devnagui.project.manager.impl.PostoCombustivelManagerBean;
+
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class ImportacaoDadosAnpBeanTest {
+
+	private static final Logger LOG = Logger
+			.getLogger(ImportacaoDadosAnpBeanTest.class);
+
+	private static final String INSERIR_POSTO_3_XML = "inserirPosto3SemBandeira.xml";
+	private static final String INSERIR_POSTO_XML = "inserirPosto.xml";
+	private static final String INSERIR_CONTRIBUINTE_XML = "inserirContribuinte.xml";
+
+    private static final Long SEQ_CONTRIBUINTE_POSTO_NOVO = 1L;
+
+
+	@TestedObject
+	private ImportacaoDadosAnpManagerBean importacaoDadosAnpManager;
+
+	@InjectIntoByType(target = "importacaoDadosAnpManager")
+	@TestedObject
+	private BandeiraPostoManagerBean bandeiraPostoManagerBean;
+
+	@InjectIntoByType(target = "importacaoDadosAnpManager")
+	@TestedObject
+	private PostoCombustivelManagerBean postoCombustivelManager;
+
+	@InjectIntoByType(target = "importacaoDadosAnpManager")
+	@TestedObject
+	private ContribuinteManagerBean contribuinteManager;
+
+	@InjectIntoByType(target = "postoCombustivelManager")
+	@TestedObject
+	private ContribuinteManagerBean contribuinteManager2;
+
+	@InjectIntoByType
+	@PersistenceContext(unitName = "test-persistence-unit")
+	private EntityManager entityManager;
+
+	@TestDataSource
+	private static DataSource dataSource;
+	
+	@Before
+    public void limparTestes() throws Exception {
+        LOG.info("Deletando alteracoes de estado na base.");
+
+        try {
+            org.dbunit.ext.oracle.OracleConnection connection = new org.dbunit.ext.oracle.OracleConnection(dataSource.getConnection(), "PROJECT");
+            QueryDataSet queryDataSet = new QueryDataSet(connection);
+            queryDataSet.addTable("POSTO_COMBUSTIVEL", "SELECT P.* FROM PROJECT.POSTO_COMBUSTIVEL P WHERE P.SEQ_CONTRIBUINTE = "+SEQ_CONTRIBUINTE_POSTO_NOVO);
+            queryDataSet.addTable("TANQUE", "SELECT T.* FROM PROJECT.TANQUE T JOIN PROJECT.POSTO_COMBUSTIVEL P ON T.SEQ_POSTO_COMBUSTIVEL= P.SEQ_POSTO_COMBUSTIVEL WHERE P.SEQ_CONTRIBUINTE = "+SEQ_CONTRIBUINTE_POSTO_NOVO);
+            queryDataSet.addTable("BOMBA", "SELECT B.* FROM PROJECT.BOMBA B JOIN PROJECT.POSTO_COMBUSTIVEL P ON B.SEQ_POSTO_COMBUSTIVEL= P.SEQ_POSTO_COMBUSTIVEL WHERE P.SEQ_CONTRIBUINTE = "+SEQ_CONTRIBUINTE_POSTO_NOVO);
+            queryDataSet.addTable("BICO", "SELECT BI.* FROM PROJECT.BICO BI JOIN PROJECT.BOMBA B ON BI.SEQ_BOMBA = B.SEQ_BOMBA JOIN PROJECT.POSTO_COMBUSTIVEL P ON B.SEQ_POSTO_COMBUSTIVEL= P.SEQ_POSTO_COMBUSTIVEL WHERE P.SEQ_CONTRIBUINTE = "+SEQ_CONTRIBUINTE_POSTO_NOVO);
+            queryDataSet.addTable("LACRE_BOMBA", "SELECT LB.* FROM PROJECT.LACRE_BOMBA LB JOIN PROJECT.BOMBA B ON LB.SEQ_BOMBA = B.SEQ_BOMBA JOIN PROJECT.POSTO_COMBUSTIVEL P ON B.SEQ_POSTO_COMBUSTIVEL= P.SEQ_POSTO_COMBUSTIVEL WHERE P.SEQ_CONTRIBUINTE = "+SEQ_CONTRIBUINTE_POSTO_NOVO);
+            queryDataSet.addTable("ROTA_VERSAO_POSTO", "SELECT RVP.* FROM PROJECT.ROTA_VERSAO_POSTO RVP JOIN PROJECT.POSTO_COMBUSTIVEL P ON RVP.SEQ_POSTO_COMBUSTIVEL= P.SEQ_POSTO_COMBUSTIVEL WHERE P.SEQ_CONTRIBUINTE = "+SEQ_CONTRIBUINTE_POSTO_NOVO);
+            DatabaseOperation.DELETE.execute(connection, queryDataSet);
+            dataSource.getConnection().commit();
+        } catch (Exception e) {
+            LOG.error(e.getMessage(),e);
+            dataSource.getConnection().rollback();
+            throw e;
+        }
+        LOG.info("Alteracoes de estado na base deletadas.");
+
+    }
+	
+	@Test
+	@DataSet(value = { INSERIR_CONTRIBUINTE_XML,INSERIR_POSTO_3_XML, INSERIR_POSTO_XML },loadStrategy=br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testCompararDadosAnpComDadosSefaz() throws BusinessException {
+		LOG.info("Inicando validação de teste de verificação de planilha com sucesso.");
+		List<Contribuinte> contribuintesParaValidacao = createContribuintesValidos();
+		List<Contribuinte> contribuintesDivergentes = importacaoDadosAnpManager.compararDadosAnpComDadosSefaz(contribuintesParaValidacao, false);
+		{
+			Contribuinte contribuinteInexistente = contribuintesDivergentes.get(0);
+			Assert.assertTrue(contribuinteInexistente.isContribuinteNaoExistente());
+		}
+		{
+			Contribuinte contruibuinteComPostoNaoCadastrado = contribuintesDivergentes.get(1);
+			Assert.assertTrue(contruibuinteComPostoNaoCadastrado.isRazaoSocialDiferente());
+		}
+		{
+			Contribuinte contribuinteComPostoNaoEncontrado = contribuintesDivergentes.get(2);
+			Assert.assertTrue(contribuinteComPostoNaoEncontrado.isNovoPosto());
+
+		}
+		{
+			Contribuinte contribuinteComPostoComBandeiraDiferente = contribuintesDivergentes.get(3);
+			Assert.assertTrue(contribuinteComPostoComBandeiraDiferente.isBandeiraDiferente());
+		}
+		{
+			Contribuinte contribuinteComPostoSembandeira = contribuintesDivergentes.get(4);
+			Assert.assertTrue(contribuinteComPostoSembandeira.isBandeiraNaoExistenteSefaz());
+		}
+
+	}
+	@Test
+	@DataSet(value = { INSERIR_CONTRIBUINTE_XML,INSERIR_POSTO_3_XML,INSERIR_POSTO_XML },loadStrategy=br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testaComaparacaoCheckBoxMarcado() throws BusinessException {
+		List<Contribuinte> contribuintesParaValidacao = createContribuintesValidos();
+		List<Contribuinte> contribuintesDivergentes = importacaoDadosAnpManager.compararDadosAnpComDadosSefaz(contribuintesParaValidacao, true);
+		{
+			Contribuinte contribuinteInexistente = contribuintesDivergentes.get(0);
+			Assert.assertTrue(contribuinteInexistente.isContribuinteNaoExistente());
+		}
+		{
+			Contribuinte contruibuinteComPostoNaoCadastrado = contribuintesDivergentes.get(1);
+			Assert.assertTrue(contruibuinteComPostoNaoCadastrado.isRazaoSocialDiferente());
+		}
+		{
+			Contribuinte contribuinteComPostoNaoEncontrado = contribuintesDivergentes.get(2);
+			Assert.assertTrue(contribuinteComPostoNaoEncontrado.isNovoPosto());
+
+		}
+		{
+			Contribuinte contribuinteComPostoComBandeiraDiferente = contribuintesDivergentes.get(3);
+			Assert.assertTrue(contribuinteComPostoComBandeiraDiferente.isBandeiraDiferente());
+		}
+		{
+			Contribuinte contribuinteComPostoSembandeira = contribuintesDivergentes.get(4);
+			Assert.assertTrue(contribuinteComPostoSembandeira.isBandeiraNaoExistenteSefaz());
+		}
+
+	}
+
+	@Test
+	public void testConsultarUltimaImportacao() {
+		ImportacaoDadosAnp importacaoDadosAnp = importacaoDadosAnpManager.contultarUltimaImportacao();
+		if (importacaoDadosAnp == null) {
+			LOG.info("Nenhum registro encontrado!!!");
+		} else {
+
+			LOG.info("Id da ultima importação " + importacaoDadosAnp.getId());
+		}
+	}
+	@Test
+	@DataSet(value = { INSERIR_POSTO_3_XML,INSERIR_POSTO_XML } , loadStrategy=br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testSalvarAlteracoes() throws BusinessException {
+		List<Contribuinte> contribuintesParaValidacao = createContribuintesValidos();
+		List<Contribuinte> contribuintesDivergentes = importacaoDadosAnpManager.compararDadosAnpComDadosSefaz(contribuintesParaValidacao, false);
+		importacaoDadosAnpManager.salvarAlteracoes(contribuintesDivergentes);
+	}
+
+	private List<Contribuinte> createContribuintesValidos() throws BusinessException {
+        List<Contribuinte> contribuintesParaValidacao = new ArrayList<Contribuinte>();
+
+        {
+            Contribuinte contribuinteInexistente = new Contribuinte();
+            contribuinteInexistente.setCnpj(9999999999L);
+            contribuintesParaValidacao.add(contribuinteInexistente);
+        }
+        
+        {
+            PostoCombustivel postoCombustivelRazaoSocialDiferente = postoCombustivelManager
+                    .getEntityManager()
+                    .createQuery("SELECT p FROM PostoCombustivel p where p.contribuinte.id is not null and p.bandeiraPosto.id is not null",
+                            PostoCombustivel.class).getResultList().iterator().next();
+            Contribuinte contribuinteRazaoDiferente = postoCombustivelRazaoSocialDiferente.getContribuinte();
+            contribuinteRazaoDiferente.setPostoCombustivel(postoCombustivelRazaoSocialDiferente);
+            contribuinteRazaoDiferente.setVinculacaoDistribuidor(postoCombustivelRazaoSocialDiferente.getBandeiraPosto().getNomeBandeira());
+            contribuinteManager.removerDoContexto(contribuinteRazaoDiferente);
+            contribuinteRazaoDiferente.setRazaoSocial(contribuinteRazaoDiferente.getRazaoSocial() + " teste");
+            contribuintesParaValidacao.add(contribuinteRazaoDiferente);
+        }
+        
+        {
+            Contribuinte contribuintePostoNovo = contribuinteManager.buscar(SEQ_CONTRIBUINTE_POSTO_NOVO);
+            contribuintePostoNovo.setVinculacaoDistribuidor("PETROBRAS DISTRIBUIDORA S.A");
+            contribuintePostoNovo.setDataVinculacaoDistribuidor(new Date());
+            LOG.info("O contribuinte-posto valido sera cadastrado. Contribuinte id=" + contribuintePostoNovo.getId());
+            contribuintesParaValidacao.add(contribuintePostoNovo);
+        }
+
+        {
+            PostoCombustivel postoBandeiraDiferente = postoCombustivelManager.buscar(-99L);
+            Contribuinte contribuinteComPostoBandeiraDiferente = postoBandeiraDiferente.getContribuinte();
+            contribuinteManager.removerDoContexto(contribuinteComPostoBandeiraDiferente);
+            contribuinteComPostoBandeiraDiferente.setVinculacaoDistribuidor("RAIZEN");
+            contribuinteComPostoBandeiraDiferente.setPostoCombustivel(postoBandeiraDiferente);
+            contribuintesParaValidacao.add(contribuinteComPostoBandeiraDiferente);
+
+            PostoCombustivel postoBandeiraNula = postoCombustivelManager.buscar(-1L);
+            Contribuinte contribuinteComPostoSembandeira = postoBandeiraNula.getContribuinte();
+            contribuinteManager.removerDoContexto(contribuinteComPostoSembandeira);
+            contribuinteComPostoSembandeira.setPostoCombustivel(postoBandeiraDiferente);
+            contribuintesParaValidacao.add(contribuinteComPostoSembandeira);
+        }
+        return contribuintesParaValidacao;
+    }
+
+}

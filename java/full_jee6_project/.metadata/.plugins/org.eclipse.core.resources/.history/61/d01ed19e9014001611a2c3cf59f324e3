@@ -1,0 +1,29 @@
+package br.gov.ce.sefaz.project.manager.impl;
+
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.gov.ce.sefaz.project.entities.CombustivelVisita;
+import br.gov.ce.sefaz.project.manager.CombustivelVisitaManager;
+
+@Stateless
+public class CombustivelVisitaManagerBean extends GenericoManagerBean<CombustivelVisita>  implements CombustivelVisitaManager {
+	
+	private static final long serialVersionUID = 8645886368764453275L;
+
+	private static final Logger LOG = Logger.getLogger(CombustivelVisitaManagerBean.class);
+
+	@Override
+	public List<CombustivelVisita> buscarCombustivelVisitaPorIdVisita(Long idVisita) {
+		LOG.info("Consultando combustiveis visita por id da visita");
+		TypedQuery<CombustivelVisita> query = getEntityManager().createNamedQuery(CombustivelVisita.CONSULTAR_COMBUSTIVEL_VISITA_POR_ID_VISITA, CombustivelVisita.class);
+		query.setParameter("idVisita", idVisita);
+		return query.getResultList();
+	}
+	
+	
+}

@@ -1,0 +1,138 @@
+package br.com.devnagui.project.manager.impl;
+
+import java.util.List;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.dto.PostoCombustivelDTO;
+import br.com.devnagui.project.entities.PostoCombustivel;
+import br.com.devnagui.project.manager.ContribuinteManager;
+import br.com.devnagui.project.manager.PostoCombustivelManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+
+/**
+ * Criado por @author 006157C6 em 11/03/2013
+ * 
+ */
+@Stateless
+public class PostoCombustivelManagerBean extends GenericManagerBean<PostoCombustivel> implements PostoCombustivelManager {
+
+	/**
+	 * Serial UID.
+	 */
+	private static final long serialVersionUID = 688376857708247921L;
+	private static final Logger LOG = Logger.getLogger(PostoCombustivelManagerBean.class);
+
+	@EJB
+	private ContribuinteManager contribuinteManager;
+
+	@Override
+	public List<PostoCombustivelDTO> obterPostosCombustiveisPorRazaoOuCNPJ(String cnpjOuRazaoSocial) throws BusinessException {
+		LOG.info("Obtendo lista de postos combustiveis DTO");
+
+		TypedQuery<PostoCombustivelDTO> query = getEntityManager().createNamedQuery(
+				PostoCombustivel.QUERY_OBTER_POSTOS_COMBUSTIVEIS_DTO_ATIVO_POR_RAZAO_OU_CNPJ, PostoCombustivelDTO.class);
+		query.setParameter("cnpj", cnpjOuRazaoSocial + "%");
+		query.setParameter("razaoSocial", "%" + cnpjOuRazaoSocial.toUpperCase() + "%");
+
+		List<PostoCombustivelDTO> postosDTO = query.getResultList();
+
+		if (postosDTO.isEmpty()) {
+			Long totalDeContribuintes = contribuinteManager.obterTotalDeContribuintePorCnpjOuRazao(cnpjOuRazaoSocial);
+			if (totalDeContribuintes == 0) {
+				// Nao existem contribuintes a razao ou cnpj informados.
+				throw new BusinessException("msg.buscaPosto.contribuinteInexistente");
+
+			} else if (totalDeContribuintes == 1) {
+				validaContribuinteAtivo(cnpjOuRazaoSocial);
+			}
+			// existe contribuinte porem o mesmo nao eh um posto valido
+			throw new BusinessException("msg.buscaPosto.naoEhPostoValido");
+		}
+
+		return postosDTO;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see br.com.devnagui.project.manager.PostoCombustivelManager#
+	 * isPostoCombustivelAtivoNaSefaz(java.lang.Long)
+	 */
+	@Override
+	public PostoCombustivel obterPostoCombustivelAtivoNaSefaz(Long cnpj) throws BusinessException {
+		validaContribuinteAtivo(cnpj.toString());
+		List<PostoCombustivel> postosAtivos = obterPostosPorCNPJ(cnpj);
+		if (postosAtivos.size() == 0) {
+			return null;
+		}
+
+		PostoCombustivel posto = postosAtivos.iterator().next();
+		initiateObjectOrCollection(posto.getBandeiraPosto());
+		return posto;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see br.com.devnagui.project.manager.PostoCombustivelManager#
+	 * isPostoCombustivelAtivoNaSefaz(java.lang.Long)
+	 */
+	@Override
+	public boolean isPostoCombustivelAtivoNaSefaz(Long cnpj) throws BusinessException {
+		List<PostoCombustivel> postosAtivos = obterPostosPorCNPJ(cnpj);
+		return !postosAtivos.isEmpty();
+	}
+
+	/**
+	 * Obtem uma lista de postos ativos por cnpj
+	 * 
+	 * @param cnpj
+	 * @return
+	 */
+	private List<PostoCombustivel> obterPostosPorCNPJ(Long cnpj) {
+		TypedQuery<PostoCombustivel> query = getEntityManager().createNamedQuery(PostoCombustivel.QUERY_BUSCA_POSTO_COMBUSTIVEL_ATIVO_POR_CNPJ,
+				PostoCombustivel.class);
+		query.setParameter("cnpj", cnpj);
+		List<PostoCombustivel> postosAtivos = query.getResultList();
+		return postosAtivos;
+	}
+
+	/**
+	 * Validar se um contribuinte est� ativo
+	 * 
+	 * @param cnpjOuRazao
+	 *            - Verifica se os contribuintes retornados para a razao ou cnpj
+	 *            s�o ativos.
+	 * @throws BusinessException
+	 */
+	private void validaContribuinteAtivo(String cnpjOuRazao) throws BusinessException {
+		boolean isContribuinteAtivoNaSefaz = contribuinteManager.isContribuinteSAtivoNoCadastroSEFAZ(cnpjOuRazao);
+		if (!isContribuinteAtivoNaSefaz) {
+			LOG.error("Contribuinte inativo no cadastro da sefaz: " + cnpjOuRazao);
+			throw new BusinessException("msg.buscaPosto.contribuinteInativo");
+		}
+	}
+
+	/**
+	 * M�todo que busca postos ativo na sefaz pelo CNPJ.
+	 * 
+	 * @return Long
+	 */
+	@Override
+	public PostoCombustivel buscarPostoCombustivelAtivoNaSefazPorCnpj(Long cnpj) {
+		List<PostoCombustivel> postosAtivos = obterPostosPorCNPJ(cnpj);
+		if (postosAtivos.size() == 0) {
+			return null;
+		}
+
+		PostoCombustivel posto = postosAtivos.iterator().next();
+		initiateObjectOrCollection(posto.getBandeiraPosto());
+		return posto;
+	}
+}

@@ -1,0 +1,114 @@
+/**
+ * Criado por 006157C6 em 22/03/2013
+ */
+package br.com.devnagui.project.manager.factory;
+
+import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.security.InvalidParameterException;
+
+import javax.ejb.EJB;
+import javax.enterprise.inject.Produces;
+import javax.enterprise.inject.spi.InjectionPoint;
+import javax.inject.Named;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceContextType;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.manager.BicoManager;
+import br.com.devnagui.project.manager.GenericoManager;
+import br.com.devnagui.project.manager.NotaFiscalEletronicaManager;
+import br.com.devnagui.project.manager.TanqueManager;
+import br.com.devnagui.project.manager.VisitaManager;
+import br.com.devnagui.project.manager.impl.GenericoManagerBean;
+import br.com.devnagui.project.manager.strategy.visita.VisitaMedicaoBicoStrategyImpl;
+import br.com.devnagui.project.manager.strategy.visita.VisitaMedicaoNotaFiscalStrategyImpl;
+import br.com.devnagui.project.manager.strategy.visita.VisitaMedicaoStrategy;
+import br.com.devnagui.project.manager.strategy.visita.VisitaMedicaoTanqueStrategyImpl;
+import br.com.devnagui.project.vo.MedicaoBicoVO;
+import br.com.devnagui.project.vo.MedicaoTanqueVO;
+import br.com.devnagui.project.webservices.consultanfe.adapter.NFEAdapter;
+
+/**
+ * <b>MUITO CUIDADO AO USAR ESSE BEAN, POIS SUAS ENTIDADES ESTARÃO DESACOPLADAS
+ * DO CONTEXTO PERSISTENTE E QUALQUER RELAÇÃO LAZY NÃO SERÁ CARREGADA</b> Criado
+ * por @author 006157C6 em 22/03/2013
+ * 
+ */
+public class InjectionFactory<E extends Serializable> implements Serializable {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	/**
+	 * Serial UID.
+	 */
+	private static final long serialVersionUID = 7649477727970775090L;
+	private static final Logger LOG = Logger.getLogger(InjectionFactory.class);
+	@PersistenceContext(name = "projectPU", type = PersistenceContextType.EXTENDED)
+	EntityManager entityManager;
+	
+	@EJB
+	private VisitaManager visitaManager;
+	@EJB
+	private TanqueManager tanqueManager;
+	@EJB
+	private NotaFiscalEletronicaManager notaFiscalEletronicaManager;
+	@EJB
+	private BicoManager bicoManager;
+
+	// METODOS PUBLICOS
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Produces
+	@Named("genericoManager")
+	/**
+	 * <b>MUITO CUIDADO AO USAR ESSE BEAN, POIS SUAS ENTIDADES ESTARÃO DESACOPLADAS
+	 * DO CONTEXTO PERSISTENTE E QUALQUER RELAÇÃO LAZY NÃO SERÁ CARREGADA</b> Criado
+	 * por @author 006157C6 em 22/03/2013
+	 * 
+	 */
+	public GenericoManager<E> entidadeGenericoManager(InjectionPoint injectionPoint) {
+		Class<?> classe = obterClasseParametrizadaDoInjectionPoint(injectionPoint);
+		LOG.info("Construindo GenericoManager parametrizavel - " + classe);
+		return new GenericoManagerBean(entityManager, classe);
+	}
+
+   
+    @Produces
+	@Named("visitaMedicaoStrategyPorTipo")
+    @SuppressWarnings("unchecked")
+    public VisitaMedicaoStrategy<E> criarVisitaMedicaoStrategyPorTipo(InjectionPoint injectionPoint){
+	    Class<?> classe = obterClasseParametrizadaDoInjectionPoint(injectionPoint);
+        if (MedicaoTanqueVO.class.equals(classe)) {
+            return (VisitaMedicaoStrategy<E>) new VisitaMedicaoTanqueStrategyImpl(visitaManager, tanqueManager);
+        } else if (MedicaoBicoVO.class.equals(classe)) {
+            return (VisitaMedicaoStrategy<E>) new VisitaMedicaoBicoStrategyImpl(visitaManager, bicoManager);
+        } else if (NFEAdapter.class.equals(classe)) {
+            return (VisitaMedicaoStrategy<E>) new VisitaMedicaoNotaFiscalStrategyImpl(visitaManager, notaFiscalEletronicaManager);
+        } else {
+            throw new InvalidParameterException("A classe " + classe.getCanonicalName() + " nao foi encontrada");
+        }
+	}
+	
+	// METODOS PRIVADOS
+	
+	 private Class<?> obterClasseParametrizadaDoInjectionPoint(InjectionPoint injectionPoint) {
+	        Type type = injectionPoint.getType();
+	        Type[] genericTypes = ((ParameterizedType) type).getActualTypeArguments();
+
+	        Class<?> classe = null;
+	        for (Type genericType : genericTypes) {
+	            try {
+	                classe = Class.forName(genericType.toString().split("class ")[1]);
+	            } catch (ClassNotFoundException e) {
+	                LOG.error("Erro ao obter classe da entidadeAtual", e);
+	            }
+	        }
+	        return classe;
+	    }
+	    
+	// GETS E SETS
+}

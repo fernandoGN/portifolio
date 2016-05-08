@@ -1,0 +1,129 @@
+package br.com.devnagui.project.manager.impl;
+
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.entities.Usuario;
+import br.com.devnagui.project.manager.UsuarioManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+
+@Stateless
+public class UsuarioManagerBean extends GenericManagerBean<Usuario> implements UsuarioManager {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9097552051222245731L;
+	
+	private static final Logger LOG = Logger.getLogger(UsuarioManagerBean.class);
+
+	private static final int NUMERO_MAXIMO_RETORNADO_QUERY_AUTOCOMPLETE = 20;
+	
+	// METODOS PUBLICOS
+	
+	/**
+	 * M�todo que busca usu�rios com matr�cula que contenham, como prefixo, a matr�cula passada como par�metro.
+	 * 
+	 * @param matricula do usu�rio
+	 * 
+	 * @return List<Usuario>
+	 */
+	@Override
+	public List<Usuario> getUserByName(final String paramBusca) {
+		final String LIKE = "%";
+		TypedQuery<Usuario> query = getEntityManager().createNamedQuery(Usuario.QUERY_BUSCAR_USUARIOS_POR_MATRICULA, Usuario.class);
+		query.setParameter("param", (paramBusca != null ? paramBusca.toUpperCase() : "") + LIKE);
+		query.setParameter("param",LIKE+ (paramBusca != null ? paramBusca.toUpperCase() : "") + LIKE);
+		query.setMaxResults(NUMERO_MAXIMO_RETORNADO_QUERY_AUTOCOMPLETE);
+		return query.getResultList();
+	}
+	
+	
+	/**
+	 * M�todo que busca na base de dados usu�rio que, possu� matr�cula E nome, iguais a matr�cula E nome passados como par�metro.
+	 * 
+	 * @param matricula do usu�rio
+	 * @param nome do usu�rio
+	 * 
+	 * @return Usuario
+	 * @throws BusinessException 
+	 */
+	@Override
+	public Usuario obterUsuarioPorMatriculaNome(String matricula, String nome) throws BusinessException {
+		try {
+			TypedQuery<Usuario> query = getEntityManager().createNamedQuery(Usuario.QUERY_BUSCAR_USUARIO_POR_MATRICULA_NOME, Usuario.class);
+			query.setParameter("matricula", (matricula != null? matricula:""));
+			query.setParameter("nome", (nome!=null? nome.toUpperCase().trim():""));
+			return query.getSingleResult();
+		} catch (NoResultException e) {
+			throw new BusinessException("mensagem.usuario.nao.existe");
+		}		
+	}
+	
+	
+	/**
+	 * M�todo que busca na base de dados usu�rio que, possu� matr�cula OU nome, iguais a matr�cula OU nome passados como par�metro.
+	 * 
+	 * @param matricula ou nome do usu�rio
+	 * 
+	 * @return Usuario
+	 * @throws BusinessException 
+	 */
+	@Override
+	public Usuario obterUsuarioPorMatriculaOuNome(String paramBusca) throws BusinessException {
+		try {
+			TypedQuery<Usuario> query = getEntityManager().createNamedQuery(Usuario.QUERY_BUSCAR_USUARIO_POR_MATRICULA_OU_NOME, Usuario.class);
+			query.setParameter("matricula", (paramBusca != null? paramBusca:""));
+			query.setParameter("nome", (paramBusca!=null? paramBusca.toUpperCase().trim():""));
+			return query.getSingleResult();
+		} catch (NoResultException e) {
+			throw new BusinessException("mensagem.usuario.nao.existe");
+		}		
+	}
+	
+	/**
+	 * M�todo que valida o objeto usuario.
+	 * 
+	 * @param usuario
+	 * @throws BusinessException
+	 */	
+	@Override
+	public void validarUsuario(Usuario usuario) throws BusinessException {
+		this.validarCamposUsuario(usuario);
+		this.validarUsuarioExiste(usuario);
+	}
+
+	/**
+	 * M�todo que valida se o objeto usuario n�o � nulo e se seus campos est�o preenchidos.
+	 * 
+	 * @param usuario
+	 * @throws BusinessException
+	 */	
+	@Override
+	public void validarCamposUsuario(Usuario usuario) throws BusinessException {
+		if( usuario == null || usuario.getMatricula() == null || usuario.getNome() == null){
+			throw new BusinessException("mensagem.usuario.nao.informado");
+		}
+	}
+
+	/**
+	 * M�todo que verifica se o usu�rio existe na base de dados, se n�o, lan�a exce��o.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Override
+	public void validarUsuarioExiste(Usuario usuario) throws BusinessException {
+		final String matriculaUsuario = usuario.getMatricula();
+		final String nomeUsuario = usuario.getNome();
+		final boolean usuarioExiste = matriculaUsuario != null && nomeUsuario != null && obterUsuarioPorMatriculaNome(matriculaUsuario, nomeUsuario) != null;
+		
+		if( !usuarioExiste ){
+			throw new BusinessException("mensagem.usuario.nao.existe");
+		}
+	}
+}

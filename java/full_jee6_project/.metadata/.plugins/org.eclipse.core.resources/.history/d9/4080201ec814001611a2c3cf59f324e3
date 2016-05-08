@@ -1,0 +1,97 @@
+package br.com.devnagui.project.rota.manter;
+
+import static org.junit.Assert.fail;
+
+import java.util.concurrent.TimeUnit;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.com.devnagui.project.manager.impl.PostoCombustivelManagerBean;
+import br.com.devnagui.project.manager.impl.RotaManagerBean;
+import br.com.devnagui.project.manager.impl.RotaVersaoManagerBean;
+
+/**
+ * 
+ * Criado por @author 006159C0 em 24/04/2013
+ *
+ */
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class RotaTesteFuncional {
+
+	private WebDriver driver;
+	private String baseUrl;
+	private boolean acceptNextAlert = true;
+	private StringBuffer verificationErrors = new StringBuffer();
+
+	@TestedObject
+	private PostoCombustivelManagerBean postoCombustivelManager;
+
+	@TestedObject
+	@InjectIntoByType(target = "rotaVersaoManagerBean")
+	private RotaManagerBean rotaManagerBean;
+	
+	@TestedObject
+	@InjectIntoByType(target = "rotaManagerBean")
+	private RotaVersaoManagerBean rotaVersaoManagerBean;
+
+	@InjectIntoByType
+	@PersistenceContext(unitName = "test-persistence-unit")
+	private EntityManager entityManager;
+
+	@Before
+	public void setUp() throws Exception {
+		driver = new FirefoxDriver();
+		baseUrl = "http://localhost:8080/project";
+		driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	}
+	
+	@Test
+	public void incluirRota() throws InterruptedException {
+		driver.get(baseUrl);
+		
+		// Mudança para a página de manterRotas.xhtml
+		driver.findElement(By.name("lnkPaginaManterRotas")).click();
+		driver.findElement(By.cssSelector("BODY"));
+		
+		// Mudança para a página de formRotas.xhtml
+		driver.findElement(By.name("inserirRota")).click();
+		driver.findElement(By.cssSelector("BODY"));
+		
+		WebElement numero = driver.findElement(By.name("numeroRota"));
+		WebElement nome = driver.findElement(By.name("nomeRota"));
+		WebElement duracao = driver.findElement(By.name("duracaoRota"));
+		WebElement observacao = driver.findElement(By.name("observacaoRotaVersao"));
+		
+		numero.sendKeys("789");
+		nome.sendKeys("Teste Local.");
+		duracao.sendKeys("8");
+		observacao.sendKeys("Teste Local.");
+		driver.findElement(By.id("cnpjBuscaPostoInput")).sendKeys("6789656000111");
+		// Warning: waitForTextPresent may require manual changes
+		for (int second = 0;; second++) {
+			if (second >= 60)
+				fail("timeout");
+			try {
+				if (driver.findElement(By.cssSelector("BODY")).getText().matches("^[\\s\\S]*CE 01 COMERCIO DE COMBUSTIVEIS LTDA[\\s\\S]*$"))
+					break;
+			} catch (Exception e) {
+			}
+			Thread.sleep(1000);
+		}
+		driver.findElement(By.name("cnpjBuscaPostoItems")).click();
+	}
+}

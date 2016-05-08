@@ -1,0 +1,24 @@
+/**
+ * Criado por 006157C6 em 26/03/2013
+ */
+package br.gov.ce.sefaz.project.manager;
+
+import java.util.List;
+import java.util.Set;
+
+import javax.ejb.Local;
+
+import br.gov.ce.sefaz.project.entities.Tanque;
+
+/**
+ * Criado por @author 006157C6 em 26/03/2013
+ * 
+ */
+@Local
+public interface TanqueManager extends GenericoManager<Tanque> {
+
+	List<Tanque> obterTanquesDoPosto(Long idPosto);
+
+	public List<Tanque> obterTanquesPorDoPostoComTipoCombustiveis(Long idPosto, Set<Long> tiposCombustiveis);
+
+}

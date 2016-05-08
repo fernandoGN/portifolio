@@ -1,0 +1,195 @@
+package br.com.devnagui.project.manager.strategy.visita;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.ejb.EJB;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.entities.Bico;
+import br.com.devnagui.project.entities.LeituraEncerrante;
+import br.com.devnagui.project.entities.ProdutoCombustivel;
+import br.com.devnagui.project.entities.Visita;
+import br.com.devnagui.project.enums.SituacaoVisita;
+import br.com.devnagui.project.manager.BicoManager;
+import br.com.devnagui.project.manager.VisitaManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.vo.MedicaoBicoVO;
+
+public class VisitaMedicaoBicoStrategyImpl implements VisitaMedicaoStrategy<MedicaoBicoVO> {
+    
+    private static final Logger LOG = Logger.getLogger(VisitaMedicaoBicoStrategyImpl.class);
+    
+    @EJB
+    private VisitaManager visitaManager;
+    
+    @EJB
+    private BicoManager bicoManager;
+    
+    public VisitaMedicaoBicoStrategyImpl(VisitaManager visitaManager, BicoManager bicoManager) {
+        this.visitaManager = visitaManager;
+        this.bicoManager = bicoManager;
+    }
+    
+    public VisitaMedicaoBicoStrategyImpl() {
+    	//Construtor criado apenas para os testes.
+	}
+
+    @Override
+    public List<MedicaoBicoVO> montarMedicoesComInformacoesAnteriores(Visita visitaAtual, Set<Long> tiposCombustiveis) throws BusinessException {
+        LOG.info("Iniciando busca de medicoes anteriores de bicos.");
+
+        // Verificar se há um filtro de tipo combustível para consultar.
+        if (tiposCombustiveis.size() == 0) {
+            LOG.info("Nao foi selecionado nenhum combustivel para realizar a busca de bicos.");
+            return null;
+        } else {
+            List<MedicaoBicoVO> medicoesBicoVOs = new ArrayList<MedicaoBicoVO>();
+            // Buscar bicos por Posto e Tipo Combustível.
+            List<Bico> bicos = bicoManager.obterBicosDoPostoPorProdutoCombustivel(visitaAtual.getPostoCombustivel().getId(), tiposCombustiveis);
+            // Iterar biscos para montar a lista de MedicaoBicoVo
+            for (Bico bico : bicos) {
+                MedicaoBicoVO medicaoBicoVO = new MedicaoBicoVO();
+                medicaoBicoVO.setBico(bico);
+                // Verificar se há medições anteriores para o bico.
+                // Sem a logica de bicos ativos, é a mesma coisa que buscar a ultima leitura encerrante por combustivel =)
+                //FIXME Nathan - Logica de leitura de encerrantes está por bico, e nao por combustivel. Ira mudar quando a logica de bicos ativos for especificada.
+                TypedQuery<LeituraEncerrante> queryLeiturasEncerrantesAnteriores = visitaManager.getEntityManager().createNamedQuery(
+                        LeituraEncerrante.QUERY_OBTER_LEIRAS_ENCERRANTES_ANTERIORES_POR_BICO, LeituraEncerrante.class);
+                queryLeiturasEncerrantesAnteriores.setParameter("idBico", bico.getId());
+                queryLeiturasEncerrantesAnteriores.setParameter("idVisitaAtual", visitaAtual.getId() != null ? visitaAtual.getId() : 0);
+                queryLeiturasEncerrantesAnteriores.setMaxResults(1);
+                // Iterar sobre as medições anteriores.
+                if (queryLeiturasEncerrantesAnteriores.getResultList().size() == 1 && visitaManager.isDadosVisitaAnteriorDisponivel(queryLeiturasEncerrantesAnteriores.getResultList().iterator().next().getVisita())) {
+                    // Adicionar ultima Medição feita sobre o bico.
+                    LeituraEncerrante leituraEncerranteAnterior = queryLeiturasEncerrantesAnteriores.getResultList().iterator().next();
+                    medicaoBicoVO.setLeituraEncerranteAnterior(leituraEncerranteAnterior);
+                }
+                medicoesBicoVOs.add(medicaoBicoVO);
+            }
+            LOG.info("Finalizando busca de medicoes anteriores de bicos.");
+            
+            preencherValoresMedicoesBicoDaVisitaAtual(visitaAtual, medicoesBicoVOs);
+            return medicoesBicoVOs;
+        }
+    }
+
+    @Override
+    public void removerMedicoesPorCombustivel(List<ProdutoCombustivel> produtoCombustiveisFiscalizados, List<MedicaoBicoVO> medicoesCombustiveis) throws BusinessException {
+        LOG.info("Removendo medicoes dos bicos que nao estao associadas aos combustiveis fiscalizados.");
+
+        Iterator<MedicaoBicoVO> iterator = medicoesCombustiveis.iterator();
+        while (iterator.hasNext()) {
+            MedicaoBicoVO medicaoBicoVOAtual = iterator.next();
+            if (!produtoCombustiveisFiscalizados.contains(medicaoBicoVOAtual.getBico().getTanque().getProdutoCombustivel())) {
+                iterator.remove();
+            }
+        }
+    }
+
+    @Override
+    public Visita salvarMedicoesCombustiveis(Visita visitaAtual, List<MedicaoBicoVO> medicoesAtuais) throws BusinessException {
+        LOG.info("Iniciando o metodo de salvar medicoes de bicos.");
+        
+        validarMedicoesBico(medicoesAtuais);
+        visitaManager.inicializarObjetoOuColecao(visitaAtual);
+        if (visitaAtual.getId() != null) {
+            limpaMedicoesBicosAnteriores(visitaAtual.getId());
+        }
+        visitaAtual.setLeituraEncerrantes(new ArrayList<LeituraEncerrante>());
+        for (MedicaoBicoVO medicaoBicoVO : medicoesAtuais) {
+            LeituraEncerrante leituraEncerrante = criarLeituraEncerrantePorMedicaoBicoVO(visitaAtual, medicaoBicoVO);
+            visitaAtual.getLeituraEncerrantes().add(leituraEncerrante);
+        }
+
+        visitaAtual.setSituacaoVisita(SituacaoVisita.ABERTA);
+        visitaAtual = visitaManager.salvar(visitaAtual);
+        LOG.info("Finalizando o metodo de salvar medicoes de bicos.");
+        
+        return visitaAtual;
+    }
+    @Override
+    public MedicaoBicoVO buscarMedicaoAnterior(Long idMedicao, Long idVisita) {
+        TypedQuery<LeituraEncerrante> query = visitaManager.getEntityManager().createNamedQuery(LeituraEncerrante.QUERY_OBTER_LEIRAS_ENCERRANTES_ANTERIORES_POR_BICO, LeituraEncerrante.class);
+        query.setParameter("idBico", idMedicao);
+        query.setParameter("idVisitaAtual", idVisita==null?0:idVisita);
+        MedicaoBicoVO medicaoBicoVO = null;
+        
+        if(query.getResultList().size() > 0) {
+            medicaoBicoVO = new MedicaoBicoVO();
+            medicaoBicoVO.setLeituraEncerranteAnterior(query.getResultList().iterator().next());
+        }
+        return medicaoBicoVO;
+    }
+    
+    private void preencherValoresMedicoesBicoDaVisitaAtual(Visita visitaAtual, List<MedicaoBicoVO> medicoesBicoVOs) {
+        LOG.info("Iniciando metodo para preencher valores das medicoes atuais dos bicos.");
+
+        //Hashmap para buscar as medicoes da minha visita atual e montar o VO com os valores atuais(que estao salvos na base ou preenchidos na visita).
+        visitaManager.inicializarObjetoOuColecao(visitaAtual);
+        HashMap<Long, LeituraEncerrante> hashMapLeituraEncerrates = new HashMap<Long, LeituraEncerrante>();
+        if (visitaAtual.getLeituraEncerrantes() != null) {
+            for (LeituraEncerrante leituraEncerranteFor : visitaAtual.getLeituraEncerrantes()) {
+                hashMapLeituraEncerrates.put(leituraEncerranteFor.getBico().getId(), leituraEncerranteFor);
+            }
+
+            for (MedicaoBicoVO meidcaoBicoVoNoFor : medicoesBicoVOs) {
+                LeituraEncerrante leituraEncerranteAtual = hashMapLeituraEncerrates.get(meidcaoBicoVoNoFor.getBico().getId());
+                if (leituraEncerranteAtual != null) {
+                    meidcaoBicoVoNoFor.setLeituraEncerranteAtual(leituraEncerranteAtual);
+                }
+            }
+        }
+        LOG.info("Finalizando metodo para preencher valores das medicoes atuais dos bicos.");
+    }
+    
+    private void validarMedicoesBico(List<MedicaoBicoVO> medicoesPorBico) throws BusinessException {
+        LOG.info("Iniciando metodo para validacao dos bicos.");
+
+
+        if (medicoesPorBico == null || medicoesPorBico.isEmpty()) {
+            throw new BusinessException("msg.visita.medicaoBico.invalida");
+        }
+
+        for (MedicaoBicoVO medicaoBicoVOAtual : medicoesPorBico) {
+            if (medicaoBicoVOAtual.getBico() == null || medicaoBicoVOAtual.getLeituraEncerranteAtual().getQtdLeituraEncerrante() == null
+                    || medicaoBicoVOAtual.getLeituraEncerranteAtual().getQtdLeituraEncerrante() == 0) {
+                LOG.error("Medicao de Bico com problema: " + medicaoBicoVOAtual);
+                throw new BusinessException("msg.visita.medicaoBico.invalida");
+            }
+            if(medicaoBicoVOAtual.getLeituraEncerranteAnterior() != null) {
+            	if(medicaoBicoVOAtual.getLeituraEncerranteAtual().getQtdLeituraEncerrante() < medicaoBicoVOAtual.getLeituraEncerranteAnterior().getQtdLeituraEncerrante()) {
+            		throw new BusinessException("msg.visita.bico.adicinar.mendicao.valor.atual.menor.anterior");
+            	}
+            }
+        }
+        LOG.info("Finalizando metodo para validacao dos bicos.");
+    }
+    
+    private void limpaMedicoesBicosAnteriores(Long idVisita) {
+        Query queryDelete = visitaManager.getEntityManager().createNamedQuery(LeituraEncerrante.QUERY_DELETE_LEITURAS_POR_VISITA);
+        queryDelete.setParameter("idVisita", idVisita);
+        queryDelete.executeUpdate();
+    }
+
+    private LeituraEncerrante criarLeituraEncerrantePorMedicaoBicoVO(Visita visita, MedicaoBicoVO medicaoBicoVO) {
+        LeituraEncerrante leituraEncerrante = new LeituraEncerrante();
+        if(medicaoBicoVO.getLeituraEncerranteAtual().getId() != null) {
+            leituraEncerrante = medicaoBicoVO.getLeituraEncerranteAtual();
+        } else {
+            leituraEncerrante.setBico(medicaoBicoVO.getBico());
+            leituraEncerrante.setQtdLeituraEncerrante(medicaoBicoVO.getLeituraEncerranteAtual().getQtdLeituraEncerrante());
+            leituraEncerrante.setVisita(visita);
+        }
+        return leituraEncerrante;
+    }
+    
+    
+    
+}

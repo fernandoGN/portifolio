@@ -1,0 +1,36 @@
+package br.com.devnagui.project.user;
+
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+
+import org.junit.Test;
+import org.mockito.stubbing.OngoingStubbing;
+
+import br.com.devnagui.project.ejb.exception.BusinessException;
+import br.com.devnagui.project.ejb.impl.UserBusinessEJB;
+import br.com.devnagui.project.entities.User;
+import static org.mockito.Mockito.*;
+public class UserBusinessEJBTest {
+
+	private static final String USER_NAME = "Nathan";
+	private static final String REGISTRATION_NUMBER = "12345678";
+
+	@Test
+	public void testGetRegistrationUserSucess() throws BusinessException {
+		UserBusinessEJB userBusinessEJB = mock(UserBusinessEJB.class);
+		OngoingStubbing<EntityManager> thenReturn = when(userBusinessEJB.getEntityManager()).thenReturn(mock(EntityManager.class));
+		TypedQuery typedQueryMock = mock(TypedQuery.class);
+		when(userBusinessEJB.getEntityManager().createNamedQuery(User.QUERY_SEARCH_BY_NAME, User.class)).thenReturn(typedQueryMock);
+		when(typedQueryMock.getSingleResult()).thenReturn(new User(REGISTRATION_NUMBER, USER_NAME));
+		User user = userBusinessEJB.getUserByRegistrationNumberAndName(REGISTRATION_NUMBER, USER_NAME);
+	}
+	
+	@Test
+	public void testValidateUser() throws BusinessException {
+		UserBusinessEJB userBusinessEJB = mock(UserBusinessEJB.class);
+		OngoingStubbing<EntityManager> thenReturn = when(userBusinessEJB.getEntityManager()).thenReturn(mock(EntityManager.class));
+		when(userBusinessEJB.getUserByRegistrationNumberAndName(REGISTRATION_NUMBER, USER_NAME)).thenReturn(new User(REGISTRATION_NUMBER, USER_NAME));
+		userBusinessEJB.validateUser(new User(REGISTRATION_NUMBER, USER_NAME));
+	}
+
+}

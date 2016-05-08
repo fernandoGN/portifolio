@@ -1,0 +1,14 @@
+package br.gov.ce.project.manager.visita;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+import br.gov.ce.project.manager.visita.manter.NotaFiscalManagerBeanTest;
+import br.gov.ce.project.manager.visita.manter.VisitaManagerBeanTest;
+
+@RunWith(Suite.class)
+@SuiteClasses({ VisitaManagerBeanTest.class, NotaFiscalManagerBeanTest.class })
+public class VisitaSuiteDeTestes {
+
+}

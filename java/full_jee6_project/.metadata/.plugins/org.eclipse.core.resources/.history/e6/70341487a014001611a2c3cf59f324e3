@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:project="PROJECT">
+	<!-- datas no formato yyyy-mm-dd -->
+
+	<project:VISITA SEQ_VISITA="1"
+		SEQ_ROTEIRO="-1" SEQ_POSTO_COMBUSTIVEL="-99" 
+		DAT_VISITA="2013-06-17" TXT_PARECER="abcdefghijklmnopqrstuvwxyz" STA_RESULTADO="1"/>
+		
+</dataset>

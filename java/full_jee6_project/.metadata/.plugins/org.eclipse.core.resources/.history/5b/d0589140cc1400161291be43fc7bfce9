@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<!-- datas no formato yyyy-mm-dd -->
+	<!-- Selenium n sabe interpretar valores negativos, entao o num bico sera 11 -->
+	<bico SEQ_BICO="-3" SEQ_TANQUE="-3" SEQ_BOMBA="-3" NUM_BICO_POSTO="-1"
+	TXT_OBSERVACAO_BICO="Bico dos testes funcionais alterado!" />
+</dataset>

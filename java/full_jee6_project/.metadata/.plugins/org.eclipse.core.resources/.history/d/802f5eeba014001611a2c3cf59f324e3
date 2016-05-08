@@ -1,0 +1,4 @@
+mail.smtp.roteiro.host=172.30.121.36
+mail.smtp.roteiro.port=25
+mail.roteiro.from=project@sefaz.ce.gov.br
+mail.charset=utf-8

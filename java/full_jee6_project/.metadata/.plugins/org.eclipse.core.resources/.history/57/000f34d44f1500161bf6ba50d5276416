@@ -1,0 +1,11 @@
+package br.com.devnagui.project.user;
+
+import org.junit.Test;
+
+public class UserBusinessEJBTest {
+
+	@Test
+	public void test() {
+	}
+
+}

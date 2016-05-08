@@ -1,0 +1,118 @@
+package br.com.devnagui.project.entities;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "ITEM_NF_ELETRONICA", schema = "PDM_NFECORP_2")
+public class ItemNotaFiscalEletronicaPDM implements Serializable {
+
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 2199956040250751412L;
+
+    
+    @Id
+    @Column(name = "SEQ_ITEM_NOTA_FISCAL", nullable = false)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_ITEM_NOTA_FISCAL")
+    @SequenceGenerator(name = "SQ_ITEM_NOTA_FISCAL", sequenceName = "SQ_ITEM_NOTA_FISCAL", allocationSize = 1, initialValue = 1, schema = "PDM_NFECORP_2")
+    private Long id;
+    
+    @ManyToOne
+    @JoinColumn(name="SEQ_NOTA_FISCAL", nullable=false)
+    private NotaFiscalEletronicaPDM notaFiscalEletronica;
+    
+    @ManyToOne
+    @JoinColumn(name="SEQ_VISITA", nullable=false)
+    private Visita visita;
+
+    @Column(name="NUM_ITEM_NFE", nullable=false)
+    private Long numeroDoItem;
+    
+    @Column(name="QTD_ITEM_NFE", nullable=false)
+    private Long quantidade;
+    
+    @Column(name="DSC_ITEM_NFE", nullable=false)
+    private String descricaoDoItem;
+    
+    @Column(name="VLR_TOTAL_NFE", nullable=false)
+    private Double valorTotal;
+    
+    @Column(name="VLR_ICMS_NFE", nullable=false)
+    private Double valorICMS;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public NotaFiscalEletronicaPDM getNotaFiscalEletronica() {
+        return notaFiscalEletronica;
+    }
+
+    public void setNotaFiscalEletronica(NotaFiscalEletronicaPDM notaFiscalEletronica) {
+        this.notaFiscalEletronica = notaFiscalEletronica;
+    }
+
+    public Long getNumeroDoItem() {
+        return numeroDoItem;
+    }
+
+    public void setNumeroDoItem(Long numeroDoItem) {
+        this.numeroDoItem = numeroDoItem;
+    }
+
+    public Long getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(Long quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public String getDescricaoDoItem() {
+        return descricaoDoItem;
+    }
+
+    public void setDescricaoDoItem(String descricaoDoItem) {
+        this.descricaoDoItem = descricaoDoItem;
+    }
+
+    public Double getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(Double valorTotal) {
+        this.valorTotal = valorTotal;
+    }
+
+    public Double getValorICMS() {
+        return valorICMS;
+    }
+
+    public void setValorICMS(Double valorICMS) {
+        this.valorICMS = valorICMS;
+    }
+
+    public Visita getVisita() {
+        return visita;
+    }
+
+    public void setVisita(Visita visita) {
+        this.visita = visita;
+    }
+    
+}

@@ -1,0 +1,260 @@
+package br.com.devnagui.project.manager.impl;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.PersistenceException;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.dto.PageObjectDTO;
+import br.com.devnagui.project.dto.PaginaRoteiroDTO;
+import br.com.devnagui.project.email.facade.EmailFacade;
+import br.com.devnagui.project.email.vo.EmailVO;
+import br.com.devnagui.project.entities.Roteiro;
+import br.com.devnagui.project.entities.Visita;
+import br.com.devnagui.project.manager.RoteiroManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.util.Util;
+import br.com.devnagui.project.util.factory.PropertiesResource;
+import br.com.devnagui.project.vo.FiltroRoteiroVO;
+
+/**
+ * 
+ * Criado por @author 006159C0 em 14/05/2013
+ * 
+ */
+@Stateless
+public class RoteiroManagerBean extends GenericManagerBean<Roteiro> implements RoteiroManager {
+
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 1L;
+
+    private static final Logger LOG = Logger.getLogger(RoteiroManagerBean.class);
+    
+    
+    @Inject
+    @PropertiesResource(name="mail.properties",loader="")
+    private Properties properties ;
+
+    @Inject
+    private EmailFacade emailFacade;
+    
+
+    /**
+     * M�todo que cria uma sugest�o para a Data Final, baseado com a dura��o da
+     * Rota Vers�o.
+     * 
+     * @return Date
+     */
+    @Override
+    public Date criarSugestaoParaDataFinal(Date dataInicial, Integer duracao) {
+        LOG.info("Sugest�o Data Final.");
+        dataInicial = Util.formatarDataComMascara(dataInicial);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dataInicial);
+        calendar.add(Calendar.DATE, duracao);
+        return calendar.getTime();
+    }
+
+    @Override
+    public void inserir(Roteiro roteiro) throws BusinessException {
+        // FIXME Wesllhey descobrir para que serve o status
+        this.validarCamposInserir(roteiro);
+        super.inserir(roteiro);
+    }
+
+    /**
+     * M�todo que valida todos os campos da roteiro no inserir.
+     * 
+     * @param roteiro
+     * @throws BusinessException
+     */
+    @Override
+    public void validarCamposInserir(Roteiro roteiro) throws BusinessException {
+        LOG.info("Iniciando valida��o de campos no inserir.");
+        this.validaDatas(roteiro);
+        this.verificarPeriodoDoRoteiroComRotaVersao(roteiro);
+    }
+
+    /**
+     * M�todo que valida as Datas de In�cio e Fim.
+     * 
+     * @throws BusinessException
+     * 
+     */
+    public void validaDatas(Roteiro roteiro) throws BusinessException {
+        Date dataSistema = new Date();
+        dataSistema = Util.formatarDataComMascara(dataSistema);
+
+        if (roteiro.getDataInicial() != null && roteiro.getDataFim() != null) {
+            int comparadorInteiroDatasInicioEHoje = roteiro.getDataInicial().compareTo(dataSistema);
+            int comparadorInteiroDatasInicioEFim = roteiro.getDataInicial().compareTo(roteiro.getDataFim());
+            int comparadorInteiroDatasFimESistema = roteiro.getDataFim().compareTo(dataSistema);
+
+            if (comparadorInteiroDatasInicioEHoje < 0)
+                throw new BusinessException("mensagem.roteiro.data.inicio.invalida1");
+            else if (comparadorInteiroDatasInicioEFim > 0)
+                throw new BusinessException("mensagem.roteiro.data.inicio.invalida2");
+            else if (comparadorInteiroDatasFimESistema < 0)
+                throw new BusinessException("mensagem.roteiro.data.fim.invalida1");
+            else if (comparadorInteiroDatasInicioEFim > 0)
+                throw new BusinessException("mensagem.roteiro.data.fim.invalida2");
+        } else if (roteiro.getDataInicial() != null && roteiro.getDataFim() == null) {
+            int comparadorInteiroDatasInicioEHoje = roteiro.getDataInicial().compareTo(dataSistema);
+
+            if (comparadorInteiroDatasInicioEHoje < 0)
+                throw new BusinessException("mensagem.roteiro.data.inicio.invalida1");
+        } else if (roteiro.getDataInicial() == null && roteiro.getDataFim() != null) {
+            int comparadorInteiroDatasFimESistema = roteiro.getDataFim().compareTo(dataSistema);
+
+            if (comparadorInteiroDatasFimESistema < 0)
+                throw new BusinessException("mensagem.roteiro.data.fim.invalida1");
+        } else
+            throw new BusinessException("mensagem.roteiro.data.invalida");
+    }
+
+    /**
+     * M�todo que verifica se a Rota Vers�o do Roteiro est� num periodo j�
+     * cadastrado, caso n�o tenha um periodo cadastrado para essa Rota Vers�o.
+     * 
+     * @return Boolean
+     * @throws BusinessException
+     */
+    @Override
+    public void verificarPeriodoDoRoteiroComRotaVersao(Roteiro roteiro) throws BusinessException {
+        LOG.info("Obtendo Roteiro pelas Data de inicio e Fim e pela Rota Vers�o.");
+        TypedQuery<Roteiro> query = getEntityManager().createNamedQuery(Roteiro.QUERY_BUSCA_ROTEIRO_PELAS_DATAS_E_ROTA_VERSAO, Roteiro.class);
+        query.setParameter("rotaVersao", roteiro.getRotaVersao().getId());
+        query.setParameter("dataInicio", roteiro.getDataInicial());
+        query.setParameter("dataFim", roteiro.getDataFim());
+        query.setParameter("dataAtual", new Date());
+
+        if (!query.getResultList().isEmpty())
+            throw new BusinessException("mensagem.roteiro.rota.versao.periodo.invalido");
+    }
+
+    @Override
+    public List<Roteiro> buscarRoteiroPorDataAufericao(Date dataAufericao) {
+        TypedQuery<Roteiro> query = getEntityManager().createNamedQuery(Roteiro.QUERY_BUSCA_ROTEIRO_POR_DATA_AUFERICAO, Roteiro.class);
+        query.setParameter("dataAufericao", dataAufericao);
+        return query.getResultList();
+    }
+    
+
+    /**
+     * Constroi o predicado da consulta paginada para roteiros, no momento da
+     * alteracao/exclusao.
+     */
+    @Override
+    protected Predicate construirCondicoesWhere(CriteriaBuilder builder, Root<Roteiro> entidadeRoot, PageObjectDTO<Roteiro> paginacao) {
+        PaginaRoteiroDTO paginacaoRoteiro = (PaginaRoteiroDTO) paginacao;
+        Path<Object> atributoDtInicioDoRoteiro = entidadeRoot.get("dataInicial");
+        Path<Object> atributoDtFimDoRoteiro = entidadeRoot.get("dataFim");
+        Path<Object> atributoMatriculaDoFiscalDoRoteiro = entidadeRoot.get("fiscal").get("usuario").get("matricula");
+
+        FiltroRoteiroVO filtroRoteiro = paginacaoRoteiro.getFiltroRoteiro();
+
+        Predicate predicateFiscal = filtroRoteiro != null && Util.isStringNotNullOuVazia(filtroRoteiro.getMatricula()) ? builder.equal(
+                atributoMatriculaDoFiscalDoRoteiro, filtroRoteiro.getMatricula()) : builder.conjunction();
+
+        Predicate predicatePeriodoInicio = filtroRoteiro != null && filtroRoteiro.getDataInicial() != null ? builder.greaterThanOrEqualTo(
+                atributoDtInicioDoRoteiro.as(Date.class), filtroRoteiro.getDataInicial()) : builder.conjunction();
+        Predicate predicatePeriodoFim = filtroRoteiro != null && filtroRoteiro.getDataFinal() != null ? builder.lessThanOrEqualTo(
+                atributoDtFimDoRoteiro.as(Date.class), filtroRoteiro.getDataFinal()) : builder.conjunction();
+
+        Predicate predicatePeriodoFimAtual = builder.greaterThanOrEqualTo(atributoDtFimDoRoteiro.as(Date.class), new Date());
+
+        return builder.and(predicateFiscal, predicatePeriodoInicio, predicatePeriodoFim, predicatePeriodoFimAtual);
+    }
+
+
+    @Override
+    public PageObjectDTO<Roteiro> obterListaRoteiroPorDataAuferiacao(PaginaRoteiroDTO paginacao) throws BusinessException {
+        try {
+            List<Roteiro> dadosPaginados = recuperarDadosPaginadosPorDataAufericao(paginacao);
+            paginacao.setDados(dadosPaginados);
+
+            int quantidadeTotalRegistros = obterQuantidadeTotalRegistrosPorDataAufericao(paginacao);
+            paginacao.setTotalRegistros(quantidadeTotalRegistros);
+
+            return paginacao;
+        } catch (PersistenceException e) {
+            LOG.error("Erro ao paginar lista de entidades - " + getEntityClass(), e);
+            throw new BusinessException(e);
+        }
+    }
+
+    private List<Roteiro> recuperarDadosPaginadosPorDataAufericao(final PaginaRoteiroDTO paginacao) {
+        CriteriaBuilder builder = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Roteiro> cQuery = builder.createQuery(getEntityClass());
+        Root<Roteiro> entidadeRoot = cQuery.from(getEntityClass());
+        cQuery.select(entidadeRoot);
+        cQuery.where(construirCondicoesWherePorDataAufericao(builder, entidadeRoot, paginacao));
+        cQuery.orderBy(construirOrderBy(builder, entidadeRoot, paginacao));
+        TypedQuery<Roteiro> typedQuery = getEntityManager().createQuery(cQuery);
+        restrictLength(paginacao, typedQuery);
+        return typedQuery.getResultList();
+    }
+
+    private int obterQuantidadeTotalRegistrosPorDataAufericao(final PaginaRoteiroDTO paginacao) {
+        CriteriaBuilder builder = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> cQuery = builder.createQuery(Long.class);
+        Root<Roteiro> entidadeRoot = cQuery.from(getEntityClass());
+        cQuery.select(builder.count(entidadeRoot));
+        cQuery.where(construirCondicoesWherePorDataAufericao(builder, entidadeRoot, paginacao));
+        Long quantidadeTotalRegistros = getEntityManager().createQuery(cQuery).getSingleResult();
+        return quantidadeTotalRegistros.intValue();
+    }
+
+    private Predicate construirCondicoesWherePorDataAufericao(CriteriaBuilder builder, Root<Roteiro> entidadeRoot, PaginaRoteiroDTO paginacao) {
+        Date dataInicioFiltro = paginacao.getFiltroRoteiro().getDataInicial();
+        if (dataInicioFiltro != null) {
+            Path<Object> dataInicial = entidadeRoot.get("dataInicial");
+            Predicate predicadoInicio = builder.lessThanOrEqualTo(dataInicial.as(Date.class), dataInicioFiltro);
+
+            Path<Object> dataFim = entidadeRoot.get("dataFim");
+            Predicate predicateFim = builder.greaterThanOrEqualTo(dataFim.as(Date.class), dataInicioFiltro);
+            return builder.and(predicadoInicio, predicateFim);
+        }
+        return builder.conjunction();
+    }
+
+	@Override
+	public void enviarEmail(EmailVO emailVO) throws BusinessException {
+		emailFacade.enviarMensagem(emailVO);
+	}
+
+	
+	@Override
+	public Boolean verificarVisitaExistenteParaRoteiroSelecionado(Long idRoteiro) { 
+		Boolean possuiVisita = false;
+		TypedQuery<Visita> query = getEntityManager().createNamedQuery(Visita.QUERY_BUSCAR_VISITA_POR_ID_ROTEIRO, Visita.class);
+		query.setParameter("idRoteiro", idRoteiro);
+		if(query.getResultList().size() > 0) {
+			possuiVisita = true;
+		}
+		return possuiVisita;
+	}
+
+	@Override
+	public List<Roteiro> buscarRoteirosPorIdFiscalDataAufericao(Long idFiscal, Date dataAufericao) {
+		TypedQuery<Roteiro> query = getEntityManager().createNamedQuery(Roteiro.QUERY_BUSCAR_ROTEIRO_POR_ID_FISCAL_DATA_AUFERICAO, Roteiro.class);
+		query.setParameter("idFiscal", idFiscal);
+		query.setParameter("dataAufericao", dataAufericao);
+		return query.getResultList();
+	}
+
+}

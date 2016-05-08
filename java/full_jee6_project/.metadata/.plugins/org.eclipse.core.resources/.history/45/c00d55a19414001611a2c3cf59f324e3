@@ -1,0 +1,99 @@
+/**
+ * Criado por 006157C6 em 28/03/2013
+ */
+package br.com.devnagui.project.manager.impl;
+
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.entities.Bomba;
+import br.com.devnagui.project.manager.BombasManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+
+/**
+ * Criado por @author 006157C6 em 28/03/2013
+ * 
+ */
+@Stateless
+public class BombaManagerBean extends GenericoManagerBean<Bomba> implements BombasManager {
+	private static final Logger LOG = Logger.getLogger(TanqueManagerBean.class);
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 879662130799334024L;
+
+	// METODOS PUBLICOS
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * br.com.devnagui.project.manager.impl.GenericoManagerBean#inserir(java.
+	 * io.Serializable)
+	 */
+	@Override
+	public void inserir(Bomba entidade) throws BusinessException {
+		validar(entidade);
+		super.inserir(entidade);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * br.com.devnagui.project.manager.impl.GenericoManagerBean#alterar(java.
+	 * io.Serializable)
+	 */
+	@Override
+	public Bomba alterar(Bomba entidade) throws BusinessException {
+		validar(entidade);
+		return super.alterar(entidade);
+	}
+
+	@Override
+	public List<Bomba> obterBombasDoPosto(long idPosto) {
+		TypedQuery<Bomba> query = getEntityManager().createNamedQuery(Bomba.QUERY_OBTER_BOMBAS_DO_POSTO, Bomba.class);
+		query.setParameter("idPosto", idPosto);
+		return query.getResultList();
+
+	}
+
+	// METODOS PRIVADOS
+	/**
+	 * Serve para...
+	 * 
+	 * @param entidade
+	 * @throws BusinessException
+	 */
+	private void validar(Bomba entidade) throws BusinessException {
+		LOG.info("Iniciando validacao de bomba.");
+
+		if (entidade.getNumBombaPosto() == null || entidade.getNumBombaPosto() == 0) {
+			throw new BusinessException("msg.aba.bomba.bombaEscolhida.numero.obrigatorio");
+		}
+
+		if (entidade.getTipoMedicaoBomba() == null) {
+			throw new BusinessException("msg.aba.bomba.bombaEscolhida.tipoMedicao.obrigatorio");
+
+		}
+
+		TypedQuery<Long> query = getEntityManager().createNamedQuery(Bomba.QUERY_VERIFICA_NUM_BOMBA_UNIQUE, Long.class);
+		query.setParameter("numBombaPosto", entidade.getNumBombaPosto());
+		query.setParameter("idBomba", entidade.getId() != null ? entidade.getId() : 0);
+		query.setParameter("idPosto", entidade.getPostoCombustivel().getId());
+		Long singleResult = query.getSingleResult();
+		if (singleResult > 0) {
+			throw new BusinessException("msg.aba.bomba.bombaEscolhida.numero.unico");
+		}
+
+		LOG.info("Finalizando validacao de bomba.");
+
+	}
+
+	// GETS E SETS
+}

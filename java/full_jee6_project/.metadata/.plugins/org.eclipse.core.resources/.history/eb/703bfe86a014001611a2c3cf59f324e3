@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<!-- datas no formato yyyy-mm-dd -->
+		
+	<bomba SEQ_BOMBA="-3" SEQ_POSTO_COMBUSTIVEL="-99"
+		NUM_BOMBA_POSTO="-3" TIP_MEDICAO_BOMBA="1" TXT_OBSERVACAO_BOMBA="BOMBA DE TESTE COM LACRE" />
+</dataset>

@@ -1,0 +1,383 @@
+/**
+ * Criado por 006157C6 em 25/04/2013
+ */
+package br.com.devnagui.project.objetodepagina.fiscal.manter;
+
+import static org.junit.Assert.fail;
+
+import org.apache.log4j.Logger;
+import org.jfree.util.Log;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+
+import br.com.devnagui.project.objetodepagina.MenuConvarObjetoDePagina;
+
+/**
+ * Criado por @author 006157C6 em 25/04/2013
+ * 
+ */
+public class FiscalObjetoDePagina extends MenuConvarObjetoDePagina {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	@FindBy(id = "btNovoFiscal")
+	private WebElement botaoNovoFiscal;
+	@FindBy(id = "btDesabilitarFiscal")
+	private WebElement botaoDesabilitarFiscal;
+	@FindBy(id = "btLimparCampos")
+	private WebElement botaoLimparCampos;
+	@FindBy(id = "btHabilitarFiscal")
+	private WebElement botaoHabilitarFiscal;
+	@FindBy(id = "btCancelar")
+	private WebElement botaoCancelar;
+	@FindBy(id = "btCancelarDesabilitar")
+	private WebElement botaoCancelarDesabilitar;
+	@FindBy(id = "btConfirmarDesabilitar")
+	private WebElement botaoConfirmarDesabilitar;
+
+	@FindBy(id = "matriculaUsuarioInput")
+	private WebElement matriculaUsuarioInput;
+	@FindBy(id = "matriculaUsuarioInput")
+	private WebElement nomeUsuarioInput;
+
+	@FindBy(id = "tabela:0:radioUsuario:0")
+	private WebElement radioButtonPrimeiroFiscalHabilitadoNaTabela;
+
+	/**
+	 * @param driver
+	 * @throws Exception
+	 */
+	public FiscalObjetoDePagina(WebDriver driver) throws Exception {
+		super(driver);
+	}
+
+	private static final Logger LOG = Logger.getLogger(FiscalObjetoDePagina.class);
+
+	private static final String ID_PAINEL_HABILITAR_FISCAL = "novoFiscalPanel";
+	private static final String ID_PAINEL_DESABILITAR_FISCAL = "desabilitarPanel";
+	private static final String ID_RADIO_BUTTON_PRIMEIRO_FISCAL_HABILITADO_NA_TABELA = "tabela:0:radioUsuario:0";
+
+	private static final String XPATH_ELEMENTO_MATRICULA_USUARIO = "//table[@id='matriculaUsuarioItems']/tbody/tr/td[2]";
+	private static final String XPATH_ELEMENTO_NOME_USUARIO = "/html/body/div/div[2]/div[3]/div[3]/form[2]/div/div[2]/div[3]/div/span[2]/div/div/div[5]/div/table/tbody/tr/td[2]";
+	private static final String MENSAGEM_FISCAL_HABILITADO_SUCESSO_COM_REGEX = "^[\\s\\S]*Fiscal habilitado com sucesso.[\\s\\S]*$";
+	private static final String MENSAGEM_FISCAL_DESABILITADO_SUCESSO_COM_REGEX = "^[\\s\\S]*Fiscal desabilitado com sucesso.[\\s\\S]*$";
+	private static final String MENSAGEM_PARA_HABILITAR_FISCAL_INFORMAR_USUARIO_COM_REGEX = "^[\\s\\S]*Para habilitar o Fiscal, \u00E9 preciso informar o Usu\u00E1rio.[\\s\\S]*$";
+	private static final String MENSAGEM_FISCAL_INFORMADO_JA_HABILTIADO_COM_REGEX = "^[\\s\\S]*O Fiscal informado j\u00E1 est\u00E1 habilitado.[\\s\\S]*$";
+
+	// METODOS PUBLICOS
+
+	/**
+	 * Cria uma nova instância da classe FiscalObjetoDePagina.
+	 * 
+	 * @param webDriver
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws Exception
+	 * 
+	 */
+	public static FiscalObjetoDePagina getInstance(WebDriver webDriver) throws Exception {
+		MenuConvarObjetoDePagina menuConvarObjetoDePagina = new MenuConvarObjetoDePagina(webDriver);
+		menuConvarObjetoDePagina.chamaPaginaInicial();
+		FiscalObjetoDePagina fiscalObjetoDePagina = menuConvarObjetoDePagina.acionarManterFiscal();
+		return fiscalObjetoDePagina;
+	}
+
+	/**
+	 * Abre a tela de cadastro de novos fiscais e limpa seus campos.
+	 * 
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina prepararNovoFiscal() throws InterruptedException {
+		this.botaoNovoFiscal.click();
+		this.esperarRenderizarElementoPorId(ID_PAINEL_HABILITAR_FISCAL);
+		this.limpaValoresAnteriores();
+		PageFactory.initElements(driver,this);
+		return this;
+	}
+
+	/**
+	 * Cria um novo fiscal recebendo como parâmetro uma matrícula de usuário
+	 * válida.
+	 * 
+	 * @param matriculaUsuario
+	 * @param nomeUsuarioValido
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina criarNovoFiscalPorMatricula(String matriculaUsuario, String nomeUsuarioValido) throws InterruptedException {
+		LOG.info("Criando novo fiscal.");
+		this.prepararNovoFiscal();
+		this.setValorElemento(matriculaUsuarioInput, matriculaUsuario);
+		LOG.info("Selecionando fiscal");
+		getElementById("matUsuarioList").click();
+		LOG.info("Esperando renderizar matricula");
+		esperaRenderizarValor(nomeUsuarioInput, nomeUsuarioValido);
+		LOG.info("Habilitando fiscal");
+		this.botaoHabilitarFiscal.click();
+		this.esperaRenderizarMensagemComRegex(MENSAGEM_FISCAL_HABILITADO_SUCESSO_COM_REGEX);
+		return this;
+	}
+
+	/**
+	 * Cria um novo fiscal recebendo como parâmetro um nome de usuário válido.
+	 * 
+	 * @param matriculaUsuario
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina criarNovoFiscalPorNome(String nomeUsuario, String matricula) throws InterruptedException {
+		LOG.info("Criando novo fiscal.");
+		this.prepararNovoFiscal();
+		
+		this.setValorElemento(nomeUsuarioInput, nomeUsuario);
+		LOG.info("Selecionando fiscal");
+		getElementById("nomeUsuarioList").click();
+		LOG.info("Esperando renderizar matricula");
+		esperaRenderizarValor(matriculaUsuarioInput, matricula);
+		LOG.info("Habilitando fiscal");
+		this.botaoHabilitarFiscal.click();
+		this.esperaRenderizarMensagemComRegex(MENSAGEM_FISCAL_HABILITADO_SUCESSO_COM_REGEX);
+		return this;
+	}
+
+	/**
+	 * Desabilita o primeiro fiscal, habilitado, contido na lista de fiscais.
+	 * 
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina desabilitarFiscal() throws InterruptedException {
+		LOG.info("Desabilitando fiscal.");
+		this.escolherPrimeiroFiscalHabilitadoParaDesabilitacao();
+		this.botaoDesabilitarFiscal.click();
+		this.esperarRenderizarElementoPorId(ID_PAINEL_DESABILITAR_FISCAL);
+		this.botaoConfirmarDesabilitar.click();
+		this.esperaRenderizarMensagemComRegex(MENSAGEM_FISCAL_DESABILITADO_SUCESSO_COM_REGEX);
+
+		return this;
+	}
+
+	/**
+	 * Procura e Seleciona o primeiro fiscal, habilitado, contido na lista de
+	 * fiscais.
+	 * 
+	 * @throws InterruptedException
+	 * 
+	 */
+	public void escolherPrimeiroFiscalHabilitadoParaDesabilitacao() throws InterruptedException {
+		this.esperarRenderizarElementoPorId(ID_RADIO_BUTTON_PRIMEIRO_FISCAL_HABILITADO_NA_TABELA);
+		this.radioButtonPrimeiroFiscalHabilitadoNaTabela.click();
+	}
+
+	/**
+	 * Preenche os campos da tela de cadastro de fiscais e em seguida os limpa.
+	 * 
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina limparDadosTelaDeHabilitacaoFiscal(String matricula, String nome) throws InterruptedException {
+		Log.info("Limpando campos da tela de cadastro de fiscal.");
+
+		this.prepararNovoFiscal();
+		this.setValorElemento(matriculaUsuarioInput, matricula);
+		this.setValorElemento(nomeUsuarioInput, nome);
+		this.botaoLimparCampos.click();
+
+		return this;
+	}
+
+	/**
+	 * Cancela a habilitação de um novo fiscal.
+	 * 
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina cancelarHabilitacaoDeFiscal() throws InterruptedException {
+		Log.info("Limpando campos da tela de cadastro de fiscal.");
+
+		this.prepararNovoFiscal();
+		this.botaoCancelar.click();
+
+		return this;
+	}
+
+	/**
+	 * Tenta habilitar um fiscal, recebendo como parâmetro, matrícula e nome de
+	 * usuário inexistentes na base.
+	 * 
+	 * @param matricula
+	 * @param nome
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina habilitarFiscalComUsuarioInexistenteParaCadastro(String matricula, String nome) throws InterruptedException {
+		Log.info("Habilitando fiscal com usuário inexistente para cadastro.");
+
+		this.prepararNovoFiscal();
+		this.setValorElemento(matriculaUsuarioInput, matricula);
+		this.setValorElemento(nomeUsuarioInput, nome);
+		this.botaoHabilitarFiscal.click();
+		this.esperaRenderizarMensagemComRegex(MENSAGEM_PARA_HABILITAR_FISCAL_INFORMAR_USUARIO_COM_REGEX);
+
+		return this;
+	}
+
+	/**
+	 * Tenta habilitar um fiscal, sem informar matrícula e nome de usuário.
+	 * 
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina habilitarFiscalComUsuarioNaoInformadoParaCadastro() throws InterruptedException {
+		Log.info("Habilitando fiscal com usuário inexistente para cadastro.");
+
+		this.prepararNovoFiscal();
+		this.botaoHabilitarFiscal.click();
+		this.esperaRenderizarMensagemComRegex(MENSAGEM_PARA_HABILITAR_FISCAL_INFORMAR_USUARIO_COM_REGEX);
+
+		return this;
+	}
+
+	/**
+	 * Tenta habilitar um fiscal que já está habilitado.
+	 * 
+	 * @param matriculaUsuarioFiscal
+	 * @param nomeUsuarioFiscal
+	 * @return {@link FiscalObjetoDePagina}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public FiscalObjetoDePagina habilitarFiscalJaHabilitado(String matriculaUsuarioValida, String nomeUsuarioValido) throws InterruptedException {
+		LOG.info("Habilitando fiscal já habilitado.");
+
+		this.prepararNovoFiscal();
+		this.setValorElemento(matriculaUsuarioInput, matriculaUsuarioValida);
+		this.setValorElemento(nomeUsuarioInput, nomeUsuarioValido);
+		this.botaoHabilitarFiscal.click();
+		this.esperaRenderizarMensagemComRegex(MENSAGEM_FISCAL_INFORMADO_JA_HABILTIADO_COM_REGEX);
+
+		return this;
+	}
+
+	/**
+	 * Verifica se o fiscal foi habilitado com sucesso.
+	 * 
+	 * @return {@link Boolean}
+	 * 
+	 */
+	public boolean isFiscalHabilitadoComSucesso() {
+		final String cssSelector = "BODY";
+		return this.getElementByCssSelector(cssSelector).getText().matches(MENSAGEM_FISCAL_HABILITADO_SUCESSO_COM_REGEX);
+	}
+
+	/**
+	 * Verifica se o fiscal foi desabilitado com sucesso.
+	 * 
+	 * @return {@link Boolean}
+	 * 
+	 */
+	public boolean isFiscalDesabilitadoComSucesso() {
+		final String cssSelector = "BODY";
+		return this.getElementByCssSelector(cssSelector).getText().matches(MENSAGEM_FISCAL_DESABILITADO_SUCESSO_COM_REGEX);
+	}
+
+	/**
+	 * Verifica se os campos da tela de cadastro foram limpos e por tanto, não
+	 * possuem mais os valores passados como parâmetro.
+	 * 
+	 * @param matricula
+	 * @param nome
+	 * @return {@link Boolean}
+	 * 
+	 */
+	public boolean isCamposTelaDeCadastroLimpos(String matricula, String nome) {
+		final String cssSelector = "BODY";
+		final boolean isCampoMatriculaLimpo = !this.getElementByCssSelector(cssSelector).getText().matches(matricula);
+		final boolean isCampoNomeLimpo = !this.getElementByCssSelector(cssSelector).getText().matches(nome);
+		return isCampoMatriculaLimpo && isCampoNomeLimpo;
+	}
+
+	/**
+	 * Verifica se foi exibida mensagem, informando que não foi informado um
+	 * usuário válido.
+	 * 
+	 * @return {@link Boolean}
+	 * 
+	 */
+	public boolean isUsuarioInexistenteParaCadastro() {
+		final String cssSelector = "BODY";
+		return this.getElementByCssSelector(cssSelector).getText().matches(MENSAGEM_PARA_HABILITAR_FISCAL_INFORMAR_USUARIO_COM_REGEX);
+	}
+
+	/**
+	 * Verifica se foi exibida mensagem, informando que não foi informado um
+	 * usuário válido.
+	 * 
+	 * @return {@link Boolean}
+	 * 
+	 */
+	public boolean isFiscalJaHabilitado() {
+		final String cssSelector = "BODY";
+		return this.getElementByCssSelector(cssSelector).getText().matches(MENSAGEM_FISCAL_INFORMADO_JA_HABILTIADO_COM_REGEX);
+	}
+
+	/**
+	 * Verifica se foi exibida mensagem, informando que não foi informado um
+	 * usuário válido.
+	 * 
+	 * @return {@link Boolean}
+	 * @throws InterruptedException
+	 * 
+	 */
+	public boolean isPainelDeCadastroDeFiscalVisivel() throws InterruptedException {
+		return this.verificarSeElementoEstaVisivel(ID_PAINEL_HABILITAR_FISCAL);
+	}
+
+	// METODOS PRIVADOS
+
+	/**
+	 * Limpa todos os campos da tela de cadastro de usuário, preparando-os para
+	 * futuras operações.
+	 * 
+	 */
+	private void limpaValoresAnteriores() {
+		matriculaUsuarioInput.clear();
+		nomeUsuarioInput.clear();
+	}
+
+	/**
+	 * Espera ate 10s para que o panel de edicao/criacao de tanques seja
+	 * renderizado.
+	 * 
+	 * @param mensagemBuscada
+	 * @throws InterruptedException
+	 */
+	private void esperaRenderizarValor(WebElement elemento, String valorEsperado) throws InterruptedException {
+		LOG.info("Esperando redenrizar valor no elemento: " + elemento);
+
+		for (int second = 0;; second++) {
+			if (second >= 10) {
+				fail("O valor esperado para o elemento " + elemento + " nao foi ajustado no tempo esperado.");
+			}
+			try {
+				String valor = elemento.getAttribute("value");
+				if (valorEsperado.equals(valor))
+					break;
+			} catch (Exception e) {
+				LOG.error(e);
+			}
+			Thread.sleep(1000);
+		}
+	}
+
+	// GETS E SETS
+}

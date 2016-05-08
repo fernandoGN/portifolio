@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PROCESS model-entity="JSFProcess">
+ <PROCESS-ITEM NAME="rules:*.xhtml" PATH="*.xhtml" SHAPE="32,17,0,0" model-entity="JSFProcessGroup">
+  <PROCESS-ITEM ID="rules:*.xhtml:0" NAME="item" PATH="*.xhtml" model-entity="JSFProcessItem">
+   <PROCESS-ITEM-OUTPUT
+    ID="escolherPosto::#paginas#postos#manterPostos.xhtml" NAME="output"
+    PATH="/paginas/postos/manterPostos.xhtml"
+    TARGET="rules:#paginas#postos#manterPostos.xhtml"
+    TITLE="escolherPosto" model-entity="JSFProcessItemOutput"/>
+  </PROCESS-ITEM>
+ </PROCESS-ITEM>
+ <PROCESS-ITEM NAME="rules:#paginas#postos#manterPostos.xhtml"
+  PATH="/paginas/postos/manterPostos.xhtml" SHAPE="240,33,0,0" model-entity="JSFProcessGroup"/>
+ <PROCESS-ITEM
+  NAME="rules:#paginas#estoqueCombustivel#auferirEstoquesCombustiveis.xhtml"
+  PATH="/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml"
+  SHAPE="32,241,0,0" model-entity="JSFProcessGroup">
+  <PROCESS-ITEM
+   ID="rules:#paginas#estoqueCombustivel#auferirEstoquesCombustiveis.xhtml:0"
+   NAME="item"
+   PATH="/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml" model-entity="JSFProcessItem">
+   <PROCESS-ITEM-OUTPUT
+    ID="SUCESSO:#{manterAufericaoEstoqueAction.verificarPostos}:#paginas#estoqueCombustivel#postosCombustiveis.xhtml"
+    NAME="output"
+    PATH="/paginas/estoqueCombustivel/postosCombustiveis.xhtml"
+    TARGET="rules:#paginas#estoqueCombustivel#postosCombustiveis.xhtml"
+    TITLE="#{manterAufericaoEstoqueAction.verificarPostos}:SUCESSO" model-entity="JSFProcessItemOutput"/>
+   <PROCESS-ITEM-OUTPUT
+    ID="*::#paginas#estoqueCombustivel#auferirEstoquesCombustiveis.xhtml"
+    NAME="output1"
+    PATH="/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml"
+    TARGET="rules:#paginas#estoqueCombustivel#auferirEstoquesCombustiveis.xhtml"
+    TITLE="*" model-entity="JSFProcessItemOutput"/>
+  </PROCESS-ITEM>
+ </PROCESS-ITEM>
+ <PROCESS-ITEM
+  NAME="rules:#paginas#estoqueCombustivel#postosCombustiveis.xhtml"
+  PATH="/paginas/estoqueCombustivel/postosCombustiveis.xhtml"
+  SHAPE="240,257,0,0" model-entity="JSFProcessGroup">
+  <PROCESS-ITEM
+   ID="rules:#paginas#estoqueCombustivel#postosCombustiveis.xhtml:0"
+   NAME="item"
+   PATH="/paginas/estoqueCombustivel/postosCombustiveis.xhtml" model-entity="JSFProcessItem">
+   <PROCESS-ITEM-OUTPUT
+    ID="SUCESSO:#{manterAufericaoEstoqueAction.verificarVisitas}:#paginas#estoqueCombustivel#postosCombustiveis.xhtml"
+    NAME="output"
+    PATH="/paginas/estoqueCombustivel/postosCombustiveis.xhtml"
+    TARGET="rules:#paginas#estoqueCombustivel#postosCombustiveis.xhtml"
+    TITLE="#{manterAufericaoEstoqueAction.verificarVisitas}:SUCESSO" model-entity="JSFProcessItemOutput"/>
+   <PROCESS-ITEM-OUTPUT
+    ID="*::#paginas#estoqueCombustivel#auferirEstoquesCombustiveis.xhtml"
+    NAME="output1"
+    PATH="/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml"
+    TARGET="rules:#paginas#estoqueCombustivel#auferirEstoquesCombustiveis.xhtml"
+    TITLE="*" model-entity="JSFProcessItemOutput"/>
+  </PROCESS-ITEM>
+ </PROCESS-ITEM>
+</PROCESS>

@@ -1,0 +1,39 @@
+package br.gov.ce.project.manager.visita.manter;
+
+import org.apache.log4j.Logger;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.inject.annotation.TestedObject;
+
+import br.com.devnagui.nfecorp.ws.consultas.nfe.ConsultaNfeService;
+import br.com.devnagui.nfecorp.ws.consultas.nfe.RetNfe;
+
+
+/**
+ * 
+ * @author 006159C0 em 24/06/2013
+ *
+ */
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class ConsultarNfeTest {
+
+	private static final Logger LOG = Logger.getLogger(ConsultarNfeTest.class);
+
+	private static final String CHAVE_ACESSO = "13110902421684000201550200000652321120282090";
+
+	@TestedObject
+	private ConsultaNfeService consultaNfeService;
+
+	@Test
+	public void consultarNfePorChaveDeAcesso() {
+		LOG.info("Consultanto NFE para a chave de acesso = " + CHAVE_ACESSO);
+		try {
+			RetNfe nfe = consultaNfeService.getConsultaNfePort().consultar(CHAVE_ACESSO);
+			LOG.info("NFE:"+nfe.getNfe().getChaveAcesso());
+		} catch (Exception e) {
+			LOG.error("Mensagem de erro genérica, deve ser substituída por 006159C0", e);
+		}
+	}
+	
+}

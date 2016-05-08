@@ -1,0 +1,54 @@
+package br.com.devnagui.project.manager;
+
+import java.util.List;
+import java.util.Set;
+
+import br.com.devnagui.project.entities.CombustivelVisita;
+import br.com.devnagui.project.entities.ProdutoCombustivel;
+import br.com.devnagui.project.entities.Visita;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.vo.CalculoConformidadeEstoqueVO;
+import br.com.devnagui.project.vo.MedicaoBicoVO;
+import br.com.devnagui.project.vo.MedicaoTanqueVO;
+import br.com.devnagui.project.vo.MedicoesVisitaVO;
+import br.com.devnagui.project.webservices.consultanfe.adapter.NFEAdapter;
+
+public interface VisitaManager extends GenericoManager<Visita> {
+
+    public List<Visita> buscarVisitasPorIdPostoCombustivel(Long idPostoCombustivel);
+    
+    public Visita salvar(Visita visita) throws BusinessException;
+
+    public List<MedicaoTanqueVO> montarMedicoesComInformacoesAnterioresPorTanque(Visita visitaAtual, Set<Long> tiposCombustiveis) throws BusinessException;
+
+    public List<MedicaoBicoVO> montarMedicoesComInformacoesAnterioresPorBico(Visita visita,Set<Long> tiposCombustiveis) throws BusinessException;
+    
+    public Visita salvarMedicoesTanques(Visita visita, List<MedicaoTanqueVO> medicoesPorTanque) throws BusinessException;
+
+    public Visita salvarMedicoesBicos(Visita visita, List<MedicaoBicoVO> medicoesPorBico) throws BusinessException;
+
+    public Visita salvarMedicoesNFE(Visita visita, List<NFEAdapter> nfeServicos) throws BusinessException;
+    
+    public void removerMedicoesPorCombustivel(Visita visita, List<ProdutoCombustivel> produtoCombustiveisFiscalizados, List<MedicaoTanqueVO> medicoesPorTanque,
+            List<MedicaoBicoVO> medicoesPorBico, List<NFEAdapter> nfeServicos) throws BusinessException;
+    
+    public Boolean isPossivelAlterarExcluirVisita(Visita visita);
+    
+    public MedicoesVisitaVO obterMedicoesPorVisita(Long id);
+    
+    public boolean isDadosVisitaAnteriorDisponivel(Visita ultimaVisita);
+
+    CalculoConformidadeEstoqueVO concluirMedicoes(Visita visita, List<ProdutoCombustivel> produtoCombustiveisFiscalizados, Boolean adicionarNFE)throws BusinessException;
+
+	public MedicaoBicoVO buscarMedicaoAnteriorPorBico(Long idBico, Long idVisita);
+	
+	public MedicaoTanqueVO buscarMedicaoAnteriorPorTanque(Long idTanque, Long idVisita);
+	
+	public NFEAdapter buscarMedicaoAnteriorPorNfe(Long idNfe, Long idVisita);
+	
+	public void salvarCombustivelVisita(Visita visita, List<CombustivelVisita> combustiveisVisita) throws BusinessException;
+
+    public void excluirNotaFiscalDaVisita(Visita visitaAtual, Long idNotaFiscal);
+    public void finalizarVisita(CalculoConformidadeEstoqueVO conformidadeEstoqueVO) throws BusinessException;
+    public Boolean isPrimeiraVisita(Long idVisita, Long idPostoCombustivel);
+}

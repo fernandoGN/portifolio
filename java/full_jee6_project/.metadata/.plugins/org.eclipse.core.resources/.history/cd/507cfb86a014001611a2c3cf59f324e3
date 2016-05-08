@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:project="PROJECT">
+	<!-- datas no formato yyyy-mm-dd -->
+
+	<project:posto_combustivel SEQ_POSTO_COMBUSTIVEL="-99"
+		SEQ_CONTRIBUINTE="8933" SEQ_BANDEIRA_POSTO="4"
+		DAT_INICIO_VINCULO_BAND="2013-01-02" />
+</dataset>

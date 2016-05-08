@@ -1,0 +1,27 @@
+package br.com.devnagui.project.manager.impl;
+
+import javax.ejb.Stateless;
+import javax.ejb.Timeout;
+import javax.persistence.TypedQuery;
+
+import br.com.devnagui.project.entities.BandeiraPosto;
+import br.com.devnagui.project.manager.BandeiraPostoManager;
+
+@Stateless
+public class BandeiraPostoManagerBean extends GenericoManagerBean<BandeiraPosto> implements BandeiraPostoManager {
+
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public BandeiraPosto buscarBandeiraPostoPorDescricaoBandeira(String descricao) {
+		try {
+			TypedQuery<BandeiraPosto> query = getEntityManager().createQuery("SELECT b FROM BandeiraPosto b WHERE b.nomeBandeira =:descricao", BandeiraPosto.class);
+			query.setParameter("descricao", descricao);
+			return query.getSingleResult();
+
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+}

@@ -1,0 +1,234 @@
+package br.com.devnagui.project.entities;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import br.com.devnagui.project.enums.SituacaoVisita;
+
+/**
+ * Classe bean da entidade Visita
+ * @author 006157C6
+ *
+ */
+
+@Entity
+@Table(name = "VISITA",schema="PROJECT")
+@SequenceGenerator(name = "SQ_VISITA", sequenceName = "SQ_VISITA", allocationSize = 1, initialValue = 1)
+@NamedQueries(value = {
+		@NamedQuery(name = Visita.QUERY_BUSCAR_ULTIMA_VISITA_POR_ID_POSTO_COMBUSTIVEL, query = "select v from Visita v where v.dataVisita  = (SELECT MAX(v.dataVisita) FROM Visita v ) and v.postoCombustivel=:idPostoCombustivel"),
+        @NamedQuery(name = Visita.QUERY_BUSCAR_VISITA_ANTERIOR_POR_POSTO_VISITA, query = "select v from Visita v where v.postoCombustivel.id = :idPostoCombustivel and (v.id < :idVisitaAtual) order by v.id desc"),
+		@NamedQuery(name = Visita.QUERY_BUSCAR_VISITAR_POR_ID_POSTO_COMBUSTIVEL, query = "select v from Visita v where v.postoCombustivel.id = :idPostoCombustivel order by v.id desc, v.situacaoVisita desc "),
+		@NamedQuery(name = Visita.QUERY_BUSCAR_VISITA_POR_ID_ROTEIRO, query = "select v from Visita v where v.roteiro.id =:idRoteiro"),
+		@NamedQuery(name = Visita.QUERY_BUSCAR_VISITA_POSTERIR_POR_VISITA, query = "select v from Visita v where v.postoCombustivel.id = :idPostoCombustivel and v.id > :idVisitaAtual order by v.id desc"),})
+public class Visita implements Serializable {
+	
+	public static final String QUERY_BUSCAR_ULTIMA_VISITA_POR_ID_POSTO_COMBUSTIVEL = "buscarUltimaVisitaPorPosto";
+	
+	public static final String QUERY_BUSCAR_VISITAR_POR_ID_POSTO_COMBUSTIVEL = "buscarVisitarPorIdPorstoCombustivel";
+	
+	public static final String QUERY_BUSCAR_VISITA_ANTERIOR_POR_POSTO_VISITA= "buscarVisitaAnteriorPorPostoVisita";
+	
+	public static final String QUERY_BUSCAR_VISITA_POR_ID_ROTEIRO = "buscarVisitaPorIdRoteiro";
+	
+	public static final String QUERY_BUSCAR_VISITA_POSTERIR_POR_VISITA = "buscarVistiaPosteriorPorIdVisita";
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 1458388819982357661L;
+    
+    
+    @Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_VISITA")
+	@Column(name = "SEQ_VISITA")
+    private Long id;
+    
+    @ManyToOne
+    @JoinColumn(name = "SEQ_ROTEIRO")
+    private Roteiro roteiro;
+    
+    @ManyToOne(cascade={CascadeType.DETACH})
+    @JoinColumn(name = "SEQ_POSTO_COMBUSTIVEL")
+    private PostoCombustivel postoCombustivel;
+    
+    @Column(name = "DAT_VISITA")
+    private Date dataVisita;
+    
+    @Column(name = "TXT_PARECER")
+    private String descParecer;
+    
+    @Column(name = "STA_RESULTADO")
+    @Enumerated(EnumType.ORDINAL)
+    private SituacaoVisita situacaoVisita;
+    
+	@OneToMany(mappedBy = "visita", cascade = { CascadeType.REMOVE,CascadeType.MERGE,CascadeType.PERSIST,CascadeType.DETACH,CascadeType.REFRESH })
+	private List<MedicaoTanque> medicoesTanque;
+	
+	/**
+	 * Essa lista é persistida a parte por conta da complexididade do relacionamento e manutencao do mesmo, portanto, nao há cascadetypes de merge ou persist
+	 */
+	@OneToMany(mappedBy = "visita",cascade = { CascadeType.REMOVE,CascadeType.DETACH,CascadeType.REFRESH })
+    private List<ItemNFEEntrada> itensDaNotaFiscal;
+	
+	@OneToMany(mappedBy = "visita",cascade = { CascadeType.REMOVE,CascadeType.MERGE,CascadeType.PERSIST,CascadeType.DETACH,CascadeType.REFRESH })
+	private List<LeituraEncerrante> leituraEncerrantes;
+	
+    @OneToMany(mappedBy = "visita",cascade = { CascadeType.REMOVE,CascadeType.MERGE,CascadeType.PERSIST,CascadeType.DETACH,CascadeType.REFRESH })
+	private List<CombustivelVisita> combustivelVisitas;
+    
+    /**
+     * Essa lista é persistida a parte por conta da complexididade do relacionamento e manutencao do mesmo, portanto, nao há cascadetypes de merge ou persist
+     */
+    @OneToMany(mappedBy = "visita",cascade = { CascadeType.REMOVE,CascadeType.DETACH,CascadeType.REFRESH })
+    private List<VisitaNfe> visitasNfe;
+    
+	
+	@Transient
+	private Set<ProdutoCombustivel> combustiveisFiscalizados;
+    
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Roteiro getRoteiro() {
+        return roteiro;
+    }
+
+    public void setRoteiro(Roteiro roteiro) {
+        this.roteiro = roteiro;
+    }
+
+    public PostoCombustivel getPostoCombustivel() {
+        return postoCombustivel;
+    }
+
+    public void setPostoCombustivel(PostoCombustivel postoCombustivel) {
+        this.postoCombustivel = postoCombustivel;
+    }
+
+    public Date getDataVisita() {
+        return dataVisita;
+    }
+
+    public void setDataVisita(Date dataVisita) {
+        this.dataVisita = dataVisita;
+    }
+
+    public String getDescParecer() {
+        return descParecer;
+    }
+
+    public void setDescParecer(String descParecer) {
+        this.descParecer = descParecer;
+    }
+
+    public SituacaoVisita getSituacaoVisita() {
+        return situacaoVisita;
+    }
+
+    public void setSituacaoVisita(SituacaoVisita situacaoVisita) {
+        this.situacaoVisita = situacaoVisita;
+    }
+
+	/**
+	 * @return the medicoesTanque
+	 */
+	public List<MedicaoTanque> getMedicoesTanque() {
+		return medicoesTanque;
+	}
+
+	/**
+	 * @param medicoesTanque 
+	 * 				the medicoesTanque to set
+	 */
+	public void setMedicoesTanque(List<MedicaoTanque> medicoesTanque) {
+		this.medicoesTanque = medicoesTanque;
+	}
+	
+    public List<ItemNFEEntrada> getItensDaNotaFiscal() {
+        return itensDaNotaFiscal;
+    }
+
+    public void setItensDaNotaFiscal(List<ItemNFEEntrada> itensDaNotaFiscal) {
+        this.itensDaNotaFiscal = itensDaNotaFiscal;
+    }
+
+    public List<LeituraEncerrante> getLeituraEncerrantes() {
+        return leituraEncerrantes;
+    }
+
+    public void setLeituraEncerrantes(List<LeituraEncerrante> leituraEncerrantes) {
+        this.leituraEncerrantes = leituraEncerrantes;
+    }
+    
+    public Set<ProdutoCombustivel> getCombustiveisFiscalizados() {
+        return combustiveisFiscalizados;
+    }
+    
+    public List<ProdutoCombustivel> getCombustiveisFiscalizadosList() {
+    	return new ArrayList<ProdutoCombustivel>(combustiveisFiscalizados); 
+    }
+
+    public void setCombustiveisFiscalizados(Set<ProdutoCombustivel> combustiveisFiscalizados) {
+        this.combustiveisFiscalizados = combustiveisFiscalizados;
+    }
+    
+    
+    
+    public List<VisitaNfe> getVisitasNfe() {
+        return visitasNfe;
+    }
+
+    public void setVisitasNfe(List<VisitaNfe> visitasNfe) {
+        this.visitasNfe = visitasNfe;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!(obj instanceof Visita))
+            return false;
+        Visita other = (Visita) obj;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        return true;
+    }
+
+}

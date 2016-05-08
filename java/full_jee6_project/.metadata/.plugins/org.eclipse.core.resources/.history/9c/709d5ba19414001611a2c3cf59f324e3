@@ -1,0 +1,265 @@
+package br.com.devnagui.project.manager.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.entities.Contribuinte;
+import br.com.devnagui.project.entities.ImportacaoDadosAnp;
+import br.com.devnagui.project.entities.PostoCombustivel;
+import br.com.devnagui.project.enums.TipoSituacaoContribuinte;
+import br.com.devnagui.project.manager.BandeiraPostoManager;
+import br.com.devnagui.project.manager.ContribuinteManager;
+import br.com.devnagui.project.manager.ImportacaoDadosAnpManager;
+import br.com.devnagui.project.manager.PostoCombustivelManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+
+/**
+ * 
+ * @author 006158c3
+ * 
+ */
+@Stateless
+public class ImportacaoDadosAnpManagerBean extends GenericoManagerBean<ImportacaoDadosAnp> implements ImportacaoDadosAnpManager {
+
+	/**
+     * 
+     */
+    private static final long serialVersionUID = -477537147339226149L;
+
+    private static final Logger LOG = Logger
+			.getLogger(ImportacaoDadosAnpManagerBean.class);
+
+	@EJB private ContribuinteManager contribuinteManager;
+	@EJB private BandeiraPostoManager bandeiraPostoManager;
+	@EJB private PostoCombustivelManager postoCombustivelManager;
+	
+	private Contribuinte contribuinte;
+	private List<Contribuinte> contribuintesSefaz;
+	private Boolean adicionarContribuinteDivergente;
+	private Contribuinte contribuinteDivergente;
+
+	/**
+	 * Comparar dados da Planilha ANP com os dados da Sefaz.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Override
+	public List<Contribuinte> compararDadosAnpComDadosSefaz(List<Contribuinte> contribuintesAnp, boolean verificarPostoAtivoSefaz) throws BusinessException {
+		List<Contribuinte> contribuintesDirvergentes = new ArrayList<Contribuinte>();
+		contribuinteDivergente = null;
+
+		try {
+            for (Contribuinte contribuinteAnp : contribuintesAnp) {
+                contribuinte=null;contribuintesSefaz=null;adicionarContribuinteDivergente=null;contribuinteDivergente=null;
+            	LOG.info("Iniciando processamento");
+            	adicionarContribuinteDivergente = false;
+            	// CONSULTAR CONTRIBUINTE SEFAZ PELO CNPJ DO CONTRIBUINTE ANP
+            	contribuintesSefaz = new ArrayList<Contribuinte>(contribuinteManager.buscarContribuinteAtivoPorCnpj(contribuinteAnp.getCnpj()));
+            	contribuinte = contribuintesSefaz.size() == 0 ? null : contribuintesSefaz.get(0);
+            	if (contribuinte == null) {
+            		LOG.info("Processando contribuinte inexistente.");
+            		this.verificarContribuinteNull(contribuinteAnp);
+            	} else {
+            	    contribuinteManager.removerDoContexto(contribuinte);
+            		if (contribuinte.getCodSituacaoContribuinte().equals(TipoSituacaoContribuinte.SITUACAO_ATIVA.getCodigoSituacao()) || contribuinte.getCodSituacaoContribuinte().equals(TipoSituacaoContribuinte.SITUACAO_ATIVA_EM_EDITAL.getCodigoSituacao())) {
+            			
+            			this.postoCadastradoNaSefazAtivoEAtivoEmEdital();
+            		} else {
+            			contribuinte.setPostoCombustivel(postoCombustivelManager.buscarPostoCombustivelAtivoNaSefazPorCnpj(contribuinte.getCnpj()));
+            			if (!(contribuinteAnp.getRazaoSocial().equals(contribuinte.getRazaoSocial()))) {
+            				LOG.info("Processando Razão social diferente para o contribuinte de id = " + contribuinte.getId());
+            				this.compararRazaoSocial(contribuinteAnp);
+            			}
+            			if (contribuinte.getPostoCombustivel() == null) {
+            				LOG.info("Processando posto não existente para o contribuinte de id = " + contribuinte.getId());
+            				this.verificarPostoCombustivelExistente(contribuinteAnp);
+            			} else {
+            				LOG.info("Processando banderia inexistente  para o contribuinte de id = " + contribuinte.getId());
+            				this.verificaBandeiraPostoExistente(contribuinteAnp);
+            			}
+            		}
+            	}
+            	// VERIFICAR SE HOUVE ALGUMA DIVERGÊNCIA NO CONTRIBUINTE ANP COM CONTRIBUINTE SEFAZ PARA ADCIONA-LO A LISTA DE CONTIBUINTES DIVERGÊNTES
+            	if (adicionarContribuinteDivergente) {
+            		contribuintesDirvergentes.add(contribuinteDivergente);
+            	}
+            	if (!(contribuintesSefaz.size() == 0)) {
+            		contribuinteManager.removerDoContexto(contribuintesSefaz.get(0));
+            	}
+            }
+            // VERIFICAR SE O USUÁRIO MARCOU A OPÇÃO DE VERIFICAR POSTOS ATIVOS SEFAZ-CE
+            verificarPostosAtivosNaSEFAZInexistentesNaPlanilha(contribuintesAnp, verificarPostoAtivoSefaz, contribuintesDirvergentes);
+        } catch (Exception e) {
+           LOG.error(e.getMessage(),e);
+           throw new BusinessException(e);
+        }
+
+		return contribuintesDirvergentes;
+	}
+	
+	/**
+	 * Método que verifica se o contribuinte existe.
+	 * 
+	 * @param contribuinteAnp
+	 */
+	private void verificarContribuinteNull(Contribuinte contribuinteAnp) {
+		contribuinteDivergente = contribuinteAnp;
+		contribuinteDivergente.setContribuinteNaoExistente(true);
+		adicionarContribuinteDivergente = true;
+	}
+	
+	/**
+	 * Método que verifica se o posto no cadastro da Sefaz é Ativo e Ativo Em Edital. 
+	 * 
+	 */
+	private void postoCadastradoNaSefazAtivoEAtivoEmEdital() {
+		contribuinteDivergente = contribuinteDivergente == null ? contribuinte : contribuinteDivergente;
+		contribuinte.setPostoInativo(true);
+		contribuinteDivergente = contribuinte;
+	}
+	
+	/**
+	 * Método que verifica se a Razão Social da planilha da ANP é igual a da Sefaz.
+	 * 
+	 * @param contribuinteAnp
+	 */
+	private void compararRazaoSocial(Contribuinte contribuinteAnp) {
+		contribuinteDivergente = contribuinteDivergente == null ? contribuinte : contribuinteDivergente;
+		contribuinte.setRazaoSocialDiferente(true);
+		contribuinte.setRazaoSocialAnp(contribuinteAnp.getRazaoSocial());
+		contribuinte.setRazaoSocial(contribuinte.getRazaoSocial());
+		adicionarContribuinteDivergente = true;
+		contribuinte.setRazaoSocialDiferente(true);
+		contribuinteDivergente = contribuinte;
+	}
+	
+	/**
+	 * Método que verifica se o posto de combustível existe.
+	 * 
+	 * @param contribuinteAnp
+	 */
+	private void verificarPostoCombustivelExistente(Contribuinte contribuinteAnp) {
+		contribuinteDivergente = contribuinteDivergente == null ? contribuinte : contribuinteDivergente;
+		contribuinte.setPostoCombustivel(new PostoCombustivel());
+		contribuinte.getPostoCombustivel().setDataInicioVinculoBandeira(contribuinteAnp.getDataVinculacaoDistribuidor());
+		String nomeBandeira = contribuinteAnp.getVinculacaoDistribuidor();
+		contribuinte.getPostoCombustivel().setBandeiraPosto(bandeiraPostoManager.buscarBandeiraPostoPorDescricaoBandeira(nomeBandeira));
+		contribuinte.getPostoCombustivel().setDataInicioVinculoBandeira(contribuinteAnp.getDataVinculacaoDistribuidor());
+		
+		if (contribuinte.getPostoCombustivel().getBandeiraPosto() == null) {
+			contribuinteDivergente = contribuinteDivergente == null ? contribuinte : contribuinteDivergente;
+			contribuinte.setVinculacaoDistribuidor(contribuinteAnp.getVinculacaoDistribuidor());
+			contribuinte.setBandeiraNaoExistenteSefaz(true);
+			adicionarContribuinteDivergente = true;
+			contribuinteDivergente = contribuinte;
+		} else if (new Long(contribuinte.getCodCNAE()) == 4731800L) {
+			contribuinte.getPostoCombustivel().setContribuinte(contribuinte);
+			contribuinte.getPostoCombustivel().setDataInicioVinculoBandeira(contribuinteAnp.getDataVinculacaoDistribuidor());
+			adicionarContribuinteDivergente = true;
+			contribuinte.setNovoPosto(true);
+		}
+		contribuinteDivergente = contribuinte;
+	}
+
+	/**
+	 * Método que verifica se a Bandeira do posto existe.
+	 * 
+	 * @param contribuinteAnp
+	 * @throws BusinessException
+	 */
+	private void verificaBandeiraPostoExistente(Contribuinte contribuinteAnp) throws BusinessException {
+		postoCombustivelManager.removerDoContexto(contribuinte.getPostoCombustivel());
+		
+		// CASO POSTO NA SEFAZ EXISTA
+		// VERIFICAR SE A BANDEIRA DO POSTO ANP NÃO EXISTE NA SEFAZ, CASO NÃO EXISTIR ADICIONA-LA COMO BANDEIRA NÃO EXISTENTE
+		if (contribuinte.getPostoCombustivel().getBandeiraPosto() == null) {
+			contribuinteDivergente = contribuinteDivergente == null ? contribuinte : contribuinteDivergente;
+			contribuinte.setVinculacaoDistribuidor(contribuinteAnp.getVinculacaoDistribuidor());
+			contribuinte.setBandeiraNaoExistenteSefaz(true);
+			adicionarContribuinteDivergente = true;
+			contribuinteDivergente = contribuinte;
+		} else if (!(contribuinte.getPostoCombustivel().getBandeiraPosto().getNomeBandeira().equals(contribuinteAnp.getVinculacaoDistribuidor()))) {
+			// VERIFICAR SE A BANDEIRA ANP É DIFERENTE A BANDEIRA SEFAZ, CASO FOR ADCIONA-LA COMO BANDEIRA DIFERENTE
+			contribuinteDivergente = contribuinteDivergente == null ? contribuinte : contribuinteDivergente;
+			contribuinte.setVinculacaoDistribuidor(contribuinteAnp.getVinculacaoDistribuidor());
+			contribuinte.setBandeiraAnterior(contribuinte.getPostoCombustivel().getBandeiraPosto().getNomeBandeira());
+			contribuinte.setBandeiraDiferente(true);
+			adicionarContribuinteDivergente = true;
+			contribuinteDivergente = contribuinte;
+		}
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param contribuintesAnp
+	 * @param verificarPostoAtivoSefaz
+	 * @param contribuintesDirvergentes
+	 * @throws BusinessException
+	 */
+	private void verificarPostosAtivosNaSEFAZInexistentesNaPlanilha(List<Contribuinte> contribuintesAnp, boolean verificarPostoAtivoSefaz, List<Contribuinte> contribuintesDirvergentes) throws BusinessException {
+		if (verificarPostoAtivoSefaz) {
+			List<PostoCombustivel> postosCombustiveis = postoCombustivelManager.buscarTodos();
+
+			// VERIFICAR SE HÁ POSTOS ATIVOS NA SEFAZ-CE QUE NÃO FORAM ENCONTRADOS NA PLANILHA ANP
+			for (PostoCombustivel postoCombustivelPROJECT : postosCombustiveis) {
+				boolean verificarPostoCombustivel = false;
+				for (Contribuinte contribuinteANP : contribuintesAnp) {
+					contribuinteANP.setRazaoSocial(contribuinteANP.getRazaoSocial() == null ? "" : contribuinteANP.getRazaoSocial());
+					if (contribuinteANP.getRazaoSocial().equals(postoCombustivelPROJECT.getContribuinte().getRazaoSocial())) {
+						verificarPostoCombustivel = true;
+					}
+				}
+				if (!(verificarPostoCombustivel)) {
+					Contribuinte contribuinteDivergente = new Contribuinte();
+					contribuinteDivergente.setRazaoSocial(postoCombustivelPROJECT.getContribuinte().getRazaoSocial());
+					contribuinteDivergente.setCnpj(postoCombustivelPROJECT.getContribuinte().getCnpj());
+					contribuinteDivergente.setPostoAtivoSefazNaoEncontadoAnp(true);
+					contribuintesDirvergentes.add(contribuinteDivergente);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	@Override
+	public void salvarAlteracoes(List<Contribuinte> contribuintes) throws BusinessException {
+		for (Contribuinte contribuinte : contribuintes) {
+			// VERIFICAR SE O STATUS DO POSTO É NOVO POSTO
+			if (contribuinte.isNovoPosto()) {
+				if(!(contribuinte.getPostoCombustivel().getContribuinte() == null)) {
+					if (!(contribuinte.getPostoCombustivel().getBandeiraPosto() == null)) {
+						postoCombustivelManager.inserir(contribuinte.getPostoCombustivel());
+					}
+				}
+			}
+			// VERIFICAR SE O STATUS DO POSTO É BANDEIRA DIFERENTE
+			if (contribuinte.isBandeiraDiferente()) {
+				contribuinte.getPostoCombustivel().setBandeiraPosto(bandeiraPostoManager.buscarBandeiraPostoPorDescricaoBandeira(contribuinte.getVinculacaoDistribuidor()));
+				postoCombustivelManager.alterar(contribuinte.getPostoCombustivel());
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	@Override
+	public ImportacaoDadosAnp contultarUltimaImportacao() {
+		try {
+			TypedQuery<ImportacaoDadosAnp> query = getEntityManager().createQuery("SELECT i FROM ImportacaoDadosAnp i WHERE i.id = (SELECT MAX(i.id) FROM ImportacaoDadosAnp i )", ImportacaoDadosAnp.class);
+			return query.getSingleResult();
+
+		} catch (Exception e) {
+			return null;
+		}
+	}
+}

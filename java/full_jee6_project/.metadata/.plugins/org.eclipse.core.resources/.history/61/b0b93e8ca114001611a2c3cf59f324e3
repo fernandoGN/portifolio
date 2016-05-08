@@ -1,0 +1,21 @@
+package br.com.devnagui.project.manager;
+
+import java.util.List;
+
+import br.com.devnagui.project.entities.Usuario;
+import br.com.devnagui.project.manager.exception.BusinessException;
+
+public interface UsuarioManager extends GenericoManager<Usuario>{
+		
+	public List<Usuario> getUserByName(String userName);
+	
+	public Usuario getUserBy(String matriculaUsuario, String nomeUsuario) throws BusinessException;
+	
+	public Usuario obterUsuarioPorMatriculaOuNome(String usuarioBuscado) throws BusinessException;
+
+	public void validarUsuario(Usuario usuario) throws BusinessException;
+
+	public void validarCamposUsuario(Usuario usuario) throws BusinessException;
+
+	public void validarUsuarioExiste(Usuario usuario) throws BusinessException;	
+}

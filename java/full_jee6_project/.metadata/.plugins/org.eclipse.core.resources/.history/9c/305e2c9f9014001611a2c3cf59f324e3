@@ -1,0 +1,111 @@
+/**
+ * Criado por 006157C6 em 29/04/2013
+ */
+package br.gov.ce.sefaz.project.objetodepagina.posto.manter;
+
+import org.apache.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.Select;
+
+import br.gov.ce.sefaz.project.entities.Bico;
+
+/**
+ * Criado por @author 006157C6 em 29/04/2013
+ * 
+ */
+
+public class BicoObjetoDePagina extends ManterPostoCombustivelObjetoDePagina {
+	// ATRIBUTOS E CONSTRUTORES
+
+	/**
+	 * 
+	 */
+	private static final String ID_PANEL_DADOS_BICO = "dadosBico";
+
+	/**
+	 * @param driver
+	 * @throws Exception
+	 */
+	public BicoObjetoDePagina(WebDriver driver) throws Exception {
+		super(driver);
+	}
+
+	private static final Logger LOG = Logger.getLogger(BicoObjetoDePagina.class);
+	private static final String MENSAGEM_SALVO_SUCESSO_REGEX = "^[\\s\\S]*Bico salvo com sucesso![\\s\\S]*$";
+
+	@FindBy(id = "btNovoBico")
+	private WebElement botaoNovoBico;
+
+	@FindBy(id = "btAlterarBico")
+	private WebElement botaoAlterarBico;
+
+	@FindBy(id = "salvarBicoAjax")
+	private WebElement botaoSalvarBico;
+
+	@FindBy(id = "selectBicos")
+	private WebElement selectBicos;
+
+	@FindBy(id = "numBico")
+	private WebElement numBico;
+
+	@FindBy(id = "tanqueSelect")
+	private WebElement tanqueSelect;
+
+	@FindBy(id = "bombaSelect")
+	private WebElement bombaSelect;
+
+	@FindBy(id = "observacoesBicoInput")
+	private WebElement observacoesBicoInput;
+
+	// METODOS PUBLICOS
+
+	public BicoObjetoDePagina criarBico(Bico bico) throws InterruptedException {
+		LOG.info("Criando bico.");
+		botaoNovoBico.click();
+		esperarRenderizarElementoPorId(ID_PANEL_DADOS_BICO);
+		preencherInformacoes(bico);
+		LOG.info("Salvando bico.");
+		botaoSalvarBico.click();
+		esperaRenderizarMensagemComRegex(MENSAGEM_SALVO_SUCESSO_REGEX);
+
+		return this;
+	}
+
+	public BicoObjetoDePagina alterarBico(Bico bico) throws InterruptedException {
+		LOG.info("Alterando bico.");
+		new Select(selectBicos).selectByValue(bico.getId().toString());
+		botaoAlterarBico.click();
+		esperarRenderizarElementoPorId(ID_PANEL_DADOS_BICO);
+		preencherInformacoes(bico);
+		LOG.info("Salvando bico.");
+		botaoSalvarBico.click();
+		esperaRenderizarMensagemComRegex(MENSAGEM_SALVO_SUCESSO_REGEX);
+
+		return this;
+	}
+
+	public boolean isBicoSalvoComSucesso() {
+		return driver.findElement(By.cssSelector("BODY")).getText().matches(MENSAGEM_SALVO_SUCESSO_REGEX);
+	}
+
+	// METODOS PRIVADOS
+	/**
+	 * Serve para...
+	 * 
+	 * @param bico
+	 */
+	private void preencherInformacoes(Bico bico) {
+		LOG.info("Preenchendo as informacoes do bico.");
+		numBico.clear();
+		observacoesBicoInput.clear();
+		numBico.sendKeys(bico.getNumBicoPosto().toString());
+		observacoesBicoInput.sendKeys(bico.getObservacaoBico());
+		new Select(bombaSelect).selectByValue(bico.getBomba().getId().toString());
+		new Select(tanqueSelect).selectByValue(bico.getTanque().getId().toString());
+	}
+
+	// GETS E SETS
+}

@@ -1,0 +1,252 @@
+/**
+ * Criado por 006157C6 em 24/04/2013
+ */
+package br.com.devnagui.project.objetodepagina;
+
+import static org.junit.Assert.fail;
+
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+
+import br.com.devnagui.project.objetodepagina.fiscal.manter.FiscalObjetoDePagina;
+import br.com.devnagui.project.objetodepagina.posto.manter.ManterPostoCombustivelObjetoDePagina;
+import br.com.devnagui.project.objetodepagina.roteiro.manter.AlterarExcluirRoteiroObjetoDePagina;
+import br.com.devnagui.project.objetodepagina.roteiro.manter.AtribuirRoteiroObjetoDePagina;
+
+/**
+ * Criado por @author 006157C6 em 24/04/2013
+ * 
+ */
+public class MenuConvarObjetoDePagina extends PageObject {
+    /**
+	 * 
+	 */
+    public static final int TEMPO_MEIO_SEGUNDO_EM_MILIS = 500;
+
+    /**
+     * Quantidade maxima de loops que representam 8 segundos para o tempo de
+     * 200ms.
+     * 
+     */
+    public static final int TOTAL_DE_LOOPS_MAXIMO = 16;
+
+    /**
+     * LOG var.
+     */
+    private static final Logger LOG = Logger.getLogger(MenuConvarObjetoDePagina.class);
+
+    /**
+     * URL padrao do project para testes.
+     */
+    private String baseUrl = "http://localhost:8080/project";
+
+    /**
+     * WebElemente para a div principal divMenuRoteiroPai.
+     */
+    @FindBy(id = "divMenuRoteiroPai")
+    private WebElement divMenuRoteiroPai;
+    
+    /**
+     * WebElemente para o link de menu de atribuir roteiros do project.
+     */
+    @FindBy(id = "lnkAtribuirRoteiro")
+    private WebElement lnkAtribuirRoteiro;
+
+    /**
+     * WebElemente para o link de menu de alterar/excluir roteiros do project.
+     */
+    @FindBy(id = "lnkAlterarExcluirRoteiro")
+    private WebElement lnkAlterarExcluirRoteiro;
+    
+    
+
+    /**
+     * @throws Exception
+     * 
+     */
+    public MenuConvarObjetoDePagina(WebDriver driver) throws Exception {
+        super(driver);
+    }
+
+    public MenuConvarObjetoDePagina chamaPaginaInicial() throws Exception {
+    	FiscalObjetoDePagina paginaInicial = PageFactory.initElements(driver, FiscalObjetoDePagina.class);
+        driver.get(baseUrl);
+        return paginaInicial;
+    }
+
+    public ManterPostoCombustivelObjetoDePagina acionarManterPostoCombustivel() {
+        return PageFactory.initElements(driver, ManterPostoCombustivelObjetoDePagina.class);
+    }
+
+    public FiscalObjetoDePagina acionarManterFiscal() throws InterruptedException {
+        getElementById("lnkPaginaManterFiscais").click();
+        esperarRenderizarElementoPorId("form_habilitar");
+        return PageFactory.initElements(driver, FiscalObjetoDePagina.class);
+    }
+
+    /**
+     * Metodo respons�vel por acionar o link de menu de atribuir roteiro.
+     * @return Um objeto de pagina para o controlador da pagina de atribuir roteiro.
+     * @throws InterruptedException Erro ao esperar pela rederizacao do form de roteiros.
+     */
+    public AtribuirRoteiroObjetoDePagina acionarAtribuirRoteiro() throws InterruptedException {
+        divMenuRoteiroPai.click();
+        lnkAtribuirRoteiro.click();
+        esperarRenderizarElementoPorId("formPai");
+        return PageFactory.initElements(driver, AtribuirRoteiroObjetoDePagina.class);
+    }
+    
+    /**
+     * Metodo respons�vel por acionar o link de menu de atribuir roteiro.
+     * @return Um objeto de pagina para o controlador da pagina de atribuir roteiro.
+     * @throws InterruptedException Erro ao esperar pela rederizacao do form de roteiros.
+     */
+    public AlterarExcluirRoteiroObjetoDePagina acionarAlterarExcluirRoteiro() throws InterruptedException {
+        divMenuRoteiroPai.click();
+        lnkAlterarExcluirRoteiro.click();
+        esperarRenderizarElementoPorId("formAlterarExcluirRoteiro");
+        return PageFactory.initElements(driver, AlterarExcluirRoteiroObjetoDePagina.class);
+    }
+
+    /**
+     * Espera ate 10s para que o panel de edicao/criacao de tanques seja
+     * renderizado.
+     * 
+     * @param mensagemBuscada
+     * @throws InterruptedException
+     */
+    protected void esperaRenderizarMensagemComRegex(String mensagemBuscada) throws InterruptedException {
+        LOG.info("Esperando redenrizar mensagem: " + mensagemBuscada);
+        retornaRaizNavegacao();
+        for (int second = 0;; second++) {
+            if (second >= TOTAL_DE_LOOPS_MAXIMO) {
+                fail("Mensagem n�o rederizada dentro do tempo esperado: " + mensagemBuscada);
+            }
+            try {
+                final String cssSelector = "BODY";
+                final boolean corpoHtmlPossuiMensagemBuscada = this.getElementByCssSelector(cssSelector).getText().matches(mensagemBuscada);
+                if (corpoHtmlPossuiMensagemBuscada) {
+                    break;
+                }
+            } catch (Exception e) {
+                LOG.error(e);
+            }
+            Thread.sleep(TEMPO_MEIO_SEGUNDO_EM_MILIS);
+        }
+    }
+
+    /**
+     * Espera ate 8s para que o elemento seja renderizado.
+     * 
+     * @param idElemento
+     * @throws InterruptedException
+     */
+    protected void esperarRenderizarElementoPorId(String idElemento) throws InterruptedException {
+        LOG.info("Esperando redenrizar elemento: " + idElemento);
+        retornaRaizNavegacao();
+        for (int second = 0;; second++) {
+            if (second >= TOTAL_DE_LOOPS_MAXIMO) {
+                fail("Elemento n�o rederizado dentro do tempo esperado: " + idElemento);
+            }
+
+            try {
+                if (driver.findElement(By.id(idElemento)) != null) {
+                    break;
+                }
+            } catch (Exception e) {
+                LOG.error(e);
+            }
+
+            Thread.sleep(TEMPO_MEIO_SEGUNDO_EM_MILIS);
+        }
+    }
+
+    /**
+     * Espera ate 10s para que o elemento seja renderizado.
+     * 
+     * @param xpath
+     * @throws InterruptedException
+     */
+    protected void selecionarElementoPeloXPath(String xpath) throws InterruptedException {
+        LOG.info("Selecionar linha pelo xpath: " + xpath);
+        retornaRaizNavegacao();
+        final int QUANTIDADE_DE_ELEMENTOS_RENDERIZADAS = 1;
+
+        for (int second = 0;; second++) {
+            if (second >= TOTAL_DE_LOOPS_MAXIMO) {
+                fail("Elemento procurado n�o foi rederizado dentro do tempo esperado: " + xpath);
+            }
+
+            try {
+                final int quantidadeElementosEncontrados = this.getElementsByXPath(xpath).size();
+                final boolean quantidadeDeElementosEncontradosIgualRenderizados = QUANTIDADE_DE_ELEMENTOS_RENDERIZADAS == quantidadeElementosEncontrados;
+                if (quantidadeDeElementosEncontradosIgualRenderizados) {
+                    this.getElementByXPath(xpath).click();
+                    break;
+                }
+            } catch (Exception e) {
+                LOG.error(e);
+            }
+
+            Thread.sleep(TEMPO_MEIO_SEGUNDO_EM_MILIS);
+        }
+    }
+
+    /**
+     * Verifica se o elemento procurado, encontra-se vis�vel.
+     * 
+     * @param idElemento
+     * @return {@link Boolean}
+     * @throws InterruptedException
+     */
+    protected boolean verificarSeElementoEstaVisivel(String idElemento) throws InterruptedException {
+        LOG.info("Verificando se o elemento est� visivel: " + idElemento);
+        retornaRaizNavegacao();
+        if (this.getElementById(idElemento).isDisplayed()) {
+            return true;
+        }
+
+        return false;
+    }
+    
+    /**
+     * Espera ate 8s para que o elemento seja renderizado.
+     * 
+     * @param idElemento
+     * @throws InterruptedException
+     */
+    protected void esperarRenderizarElementoPor(final By by) throws InterruptedException {
+        LOG.info("Esperando redenrizar elemento: " + by.toString());
+        retornaRaizNavegacao();
+        for (int second = 0;; second++) {
+            if (second >= TOTAL_DE_LOOPS_MAXIMO) {
+                fail("Elemento n�o rederizado dentro do tempo esperado: " + by);
+            }
+
+            try {
+                if (!driver.findElements(by).isEmpty()) {
+                    break;
+                }
+            } catch (Exception e) {
+                LOG.error(e);
+            }
+
+            Thread.sleep(TEMPO_MEIO_SEGUNDO_EM_MILIS);
+        }
+    }
+
+    private void retornaRaizNavegacao() {
+        LOG.info(driver.switchTo().activeElement());
+        LOG.info(driver.switchTo().defaultContent());
+        driver = driver.switchTo().defaultContent();
+        PageFactory.initElements(driver, this);
+    }
+
+}

@@ -1,0 +1,70 @@
+/**
+ * 
+ */
+package br.com.devnagui.project.vo;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import br.com.devnagui.project.entities.Visita;
+import br.com.devnagui.project.enums.SituacaoVisita;
+
+/**
+ * @author 006157C6
+ *
+ */
+public class CalculoConformidadeEstoqueVO implements Serializable {
+
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 3781564634982768055L;
+
+    private Set<CalculoConformidadeProdutoCombustivelVO> calculosConformidadesPorProdutosCombustiveis;
+    
+    private SituacaoVisita situacaoVisitaOriginal;
+    
+    public CalculoConformidadeEstoqueVO(Set<CalculoConformidadeProdutoCombustivelVO> calculosConformidadesPorProdutosCombustiveis, Visita visita) {
+        super();
+        this.calculosConformidadesPorProdutosCombustiveis = calculosConformidadesPorProdutosCombustiveis;
+        this.visita = visita;
+        situacaoVisitaOriginal = visita.getSituacaoVisita();
+    }
+
+    private Visita visita;
+    
+    public Visita getVisita() {
+        return visita;
+    }
+    
+    public void setVisita(Visita visita) {
+        this.visita = visita;
+    }
+
+    public Set<CalculoConformidadeProdutoCombustivelVO> getCalculosConformidadesPorProdutosCombustiveis() {
+        return calculosConformidadesPorProdutosCombustiveis;
+    }
+    
+    public List<CalculoConformidadeProdutoCombustivelVO> getCalculosConformidadesPorProdutosCombustiveisAsList() {
+    	if(calculosConformidadesPorProdutosCombustiveis == null) {
+    		return new ArrayList<CalculoConformidadeProdutoCombustivelVO>();
+    	} else {
+    		return new ArrayList<CalculoConformidadeProdutoCombustivelVO>(calculosConformidadesPorProdutosCombustiveis);
+    	}
+    }
+    
+    public void setCalculosConformidadesPorProdutosCombustiveis(Set<CalculoConformidadeProdutoCombustivelVO> calculosConformidadesPorProdutosCombustiveis) {
+        this.calculosConformidadesPorProdutosCombustiveis = calculosConformidadesPorProdutosCombustiveis;
+    }
+
+    public SituacaoVisita getSituacaoVisita() {
+        return situacaoVisitaOriginal;
+    }
+
+    public void setSituacaoVisita(SituacaoVisita situacaoVisita) {
+        this.situacaoVisitaOriginal = situacaoVisita;
+    }
+    
+}

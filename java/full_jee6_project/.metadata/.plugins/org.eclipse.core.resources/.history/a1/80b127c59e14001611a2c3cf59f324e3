@@ -1,0 +1,152 @@
+package br.com.devnagui.project.entities;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "LEITURA_ENCERRANTE",schema="PROJECT")
+@SequenceGenerator(name = "SQ_LEITURA_ENCERRANTE", sequenceName = "SQ_LEITURA_ENCERRANTE", allocationSize = 1, initialValue = 1)
+@NamedQueries(value = {
+		@NamedQuery(name = LeituraEncerrante.QUERY_OBTER_LEIRAS_ENCERRANTES_ANTERIORES_POR_BICO, query = "select le from LeituraEncerrante le where le.bico.id = :idBico and (le.visita.id <> :idVisitaAtual and le.visita.id is not null) and le.visita.situacaoVisita in (1,2,3) order by le.id desc"),
+		@NamedQuery(name = LeituraEncerrante.QUERY_DELETE_LEITURAS_POR_VISITA, query = "delete from LeituraEncerrante le where le.visita.id = :idVisita"),
+        @NamedQuery(name = LeituraEncerrante.QUERY_OBTER_LEITURAS_POR_VISITA, query = "select le from LeituraEncerrante le where le.visita.id =:idVisita")
+		})
+public class LeituraEncerrante implements Serializable {
+//   
+	/**
+	 * Serial UID.
+	 */
+	private static final long serialVersionUID = -2853727463312089222L;
+
+	public static final String QUERY_OBTER_LEIRAS_ENCERRANTES_ANTERIORES_POR_BICO = "obterLeiturasEncerrantesAnterioresPorBico";
+	
+	public static final String QUERY_OBTER_LEITURAS_POR_VISITA = "obterLeiturasPorVisita";
+    public static final String QUERY_DELETE_LEITURAS_POR_VISITA = "obterDeletarLeiturasPorVisita";
+
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_LEITURA_ENCERRANTE")
+	@Column(name = "SEQ_LEITURA_ENCERRANTE")
+	private Long id;
+	
+	@ManyToOne
+	@JoinColumn(name = "SEQ_VISITA")
+	private Visita visita;
+
+	@ManyToOne
+	@JoinColumn(name = "SEQ_BICO")
+	private Bico bico;
+
+	@Column(name = "QTD_LEITURA_ENCERRANTE")
+	private Long qtdLeituraEncerrante;
+
+	/**
+	 * @return the id
+	 */
+	public Long getId() {
+		return id;
+	}
+
+	/**
+	 * @param id 
+	 * 				the id to set
+	 */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return the visita
+	 */
+	public Visita getVisita() {
+		return visita;
+	}
+
+	/**
+	 * @param visita 
+	 * 				the visita to set
+	 */
+	public void setVisita(Visita visita) {
+		this.visita = visita;
+	}
+
+	/**
+	 * @return the bico
+	 */
+	public Bico getBico() {
+		return bico;
+	}
+
+	/**
+	 * @param bico 
+	 * 				the bico to set
+	 */
+	public void setBico(Bico bico) {
+		this.bico = bico;
+	}
+
+	/**
+	 * @return the qtdLeituraEncerrante
+	 */
+	public Long getQtdLeituraEncerrante() {
+		return qtdLeituraEncerrante;
+	}
+
+	/**
+	 * @param qtdLeituraEncerrante 
+	 * 				the qtdLeituraEncerrante to set
+	 */
+	public void setQtdLeituraEncerrante(Long qtdLeituraEncerrante) {
+		this.qtdLeituraEncerrante = qtdLeituraEncerrante;
+	}
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bico == null) ? 0 : bico.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((visita == null) ? 0 : visita.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!(obj instanceof LeituraEncerrante))
+            return false;
+        LeituraEncerrante other = (LeituraEncerrante) obj;
+        if (bico == null) {
+            if (other.bico != null)
+                return false;
+        } else if (!bico.equals(other.bico))
+            return false;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (visita == null) {
+            if (other.visita != null)
+                return false;
+        } else if (!visita.equals(other.visita))
+            return false;
+        return true;
+    }
+	
+	
+}

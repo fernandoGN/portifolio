@@ -1,0 +1,36 @@
+package br.gov.ce.sefaz.project.enums;
+
+import java.security.InvalidParameterException;
+import java.util.Arrays;
+import java.util.List;
+
+public enum GrupoCombustivel {
+	
+	ETANOL(1), DIESEL(2), GASOLINA(3), GAS_LIQUEFEITO(4), OLEO_COMBUSTIVEL(5);
+
+	private final Integer tipoCombustivel;
+
+	/**
+	 * 
+	 */
+	private GrupoCombustivel(final Integer codSituacao) {
+		this.tipoCombustivel = codSituacao;
+	}
+
+	/**
+	 * @return the codigoSituacao
+	 */
+	public Integer getCodigoSituacao() {
+		return tipoCombustivel;
+	}
+	
+	public static GrupoCombustivel getStatusRoteiroPorCodigo(final Integer codigo){
+	    List<GrupoCombustivel> statusList = Arrays.asList(GrupoCombustivel.values());
+	    for(GrupoCombustivel status:statusList){
+	        if(status.tipoCombustivel == codigo){
+	            return status;
+	        }
+	    }
+	    throw new InvalidParameterException("msg.enum.naoEncontrada");
+	}
+}

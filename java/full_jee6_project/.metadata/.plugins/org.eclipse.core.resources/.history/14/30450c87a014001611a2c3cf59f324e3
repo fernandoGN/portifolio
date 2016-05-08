@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:project="PROJECT" xmlns:sisseg="SISSEG">
+    
+    <sisseg:usuario seq_usuario="2" NOM_USUARIO="usuario 2 dos testes" NUM_MATRICULA="99999" />
+    
+    <project:fiscal  seq_fiscal="1"
+    				seq_usuario="2" 
+                    sta_fiscal="1" />
+    
+    
+    <project:historico_habilita_fiscal   seq_hist_habilita_fiscal="1"
+                                        seq_fiscal="1" dat_desabilitacao="[null]"
+                                        dat_habilitacao="2013-04-22" />
+                         	
+</dataset>

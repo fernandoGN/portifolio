@@ -1,0 +1,133 @@
+package br.gov.ce.sefaz.project.posto.manter;
+
+import java.util.concurrent.TimeUnit;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+
+import junit.framework.Assert;
+
+import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.dbunit.annotation.DataSet;
+import org.unitils.dbunit.annotation.ExpectedDataSet;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.gov.ce.sefaz.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy;
+import br.gov.ce.sefaz.project.entities.Bico;
+import br.gov.ce.sefaz.project.entities.Bomba;
+import br.gov.ce.sefaz.project.entities.Tanque;
+import br.gov.ce.sefaz.project.manager.exception.BusinessException;
+import br.gov.ce.sefaz.project.manager.impl.BicoManagerBean;
+import br.gov.ce.sefaz.project.manager.impl.BombaManagerBean;
+import br.gov.ce.sefaz.project.manager.impl.TanqueManagerBean;
+import br.gov.ce.sefaz.project.objetodepagina.MenuConvarObjetoDePagina;
+import br.gov.ce.sefaz.project.objetodepagina.posto.manter.BicoObjetoDePagina;
+import br.gov.ce.sefaz.project.posto.ManterPostoCombustivelSuiteDeTestes;
+
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class BicoTesteFuncional {
+
+	private static final String INSERIR_BICO_XML = "inserirBico.xml";
+	private static final Logger LOG = Logger.getLogger(BicoTesteFuncional.class);
+	public static final long SEQ_POSTO_DATASET = -99L;
+	private static final Long SEQ_BICO = -3l;
+
+	@TestedObject
+	private TanqueManagerBean tanqueManagerBean;
+
+	@TestedObject
+	private BombaManagerBean bombaManagerBean;
+
+	@TestedObject
+	private BicoManagerBean bicoManagerBean;
+
+	@InjectIntoByType
+	@PersistenceContext(unitName = "test-persistence-unit")
+	private EntityManager entityManager;
+
+	private WebDriver driver;
+
+	@Before
+	public void abrirBrowser() {
+		driver = new FirefoxDriver();
+		driver.manage().timeouts().implicitlyWait(ManterPostoCombustivelSuiteDeTestes.TEMPO_MAXIMO_TESTE_FUNCIONAL, TimeUnit.SECONDS);
+	}
+
+	@After
+	public void fecharBrowser() {
+		LOG.info("Finalizando os Testes funcionais.");
+		driver.close();
+	}
+
+	@Test
+	@DataSet(value = { TanqueTesteFuncional.INSERIR_POSTO_XML, TanqueTesteFuncional.INSERIR_TANQUE_XML, BombaTesteFuncional.INSERIR_BOMBA_XML }, loadStrategy = InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testIncluirBico() throws Exception {
+		MenuConvarObjetoDePagina menuConvarObjetoDePagina = new MenuConvarObjetoDePagina(driver);
+		menuConvarObjetoDePagina.chamaPaginaInicial();
+		BicoObjetoDePagina bicoObjetoDePagina = menuConvarObjetoDePagina.acionarManterPostoCombustivel()
+				.digitaEEscolheNaBuscaPosto(TanqueTesteFuncional.CNPJ_POSTO_VALIDO.toString()).mudaAbaManutencaoDeBicos();
+		bicoObjetoDePagina.criarBico(obterNovoBicoValidoParaInsercao());
+		Assert.assertTrue(bicoObjetoDePagina.isBicoSalvoComSucesso());
+	}
+
+	@Test
+	@DataSet(value = { TanqueTesteFuncional.INSERIR_POSTO_XML, TanqueTesteFuncional.INSERIR_TANQUE_XML, BombaTesteFuncional.INSERIR_BOMBA_XML,
+			INSERIR_BICO_XML }, loadStrategy = InsertOrUpdateWithCommitLoadStrategy.class)
+	@ExpectedDataSet("dataSetBicoEsperado.xml")
+	public void testAlterarBico() throws Exception {
+		MenuConvarObjetoDePagina menuConvarObjetoDePagina = new MenuConvarObjetoDePagina(driver);
+		menuConvarObjetoDePagina.chamaPaginaInicial();
+		BicoObjetoDePagina bicoObjetoDePagina = menuConvarObjetoDePagina.acionarManterPostoCombustivel()
+				.digitaEEscolheNaBuscaPosto(TanqueTesteFuncional.CNPJ_POSTO_VALIDO.toString()).mudaAbaManutencaoDeBicos();
+		Bico bico = obterBicoParaAlteracao();
+		bico.setObservacaoBico("Bico dos testes funcionais alterado!");
+		bicoObjetoDePagina.alterarBico(bico);
+		Assert.assertTrue(bicoObjetoDePagina.isBicoSalvoComSucesso());
+
+	}
+
+	/**
+	 * cRIA UM NOVO NUMERO DE TANQUE VALIDO DE ACORDO COM A BASE.
+	 * 
+	 * @return
+	 * @throws BusinessException
+	 */
+	private Bico obterNovoBicoValidoParaInsercao() throws BusinessException {
+		Tanque tanque = tanqueManagerBean.buscar(TanqueTesteFuncional.SEQ_TANQUE_ALTERACAO);
+		Bomba bomba = bombaManagerBean.buscar(BombaTesteFuncional.SEQ_BOMBA);
+		Bico bico = new Bico();
+		bico.setBomba(bomba);
+		bico.setTanque(tanque);
+		bico.setObservacaoBico("Bico novo dos testes funcionais!");
+		TypedQuery<Long> query = entityManager.createQuery("select count(b.numBicoPosto) from Bico b where b.bomba.postoCombustivel.id = :idPosto",
+				Long.class);
+		query.setParameter("idPosto", bomba.getPostoCombustivel().getId());
+		Long maximoNumBico = query.getSingleResult();
+		bico.setNumBicoPosto(maximoNumBico + 1);
+		return bico;
+	}
+
+	/**
+	 * oBTEM UM ID de tanque valido para ser alterado
+	 * 
+	 * @return
+	 * @throws BusinessException
+	 */
+	private Bico obterBicoParaAlteracao() throws BusinessException {
+		Bico bico = bicoManagerBean.buscar(SEQ_BICO);
+		bicoManagerBean.removerDoContexto(bico);
+		return bico;
+
+	}
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="PROJECT">
+	
+	<rota seq_rota="-7" num_rota="15" nom_rota="Teste Desativar 15"
+		sta_rota="1" TXT_OBSERVACAO_ROTA="" />
+
+	<rota_versao seq_rota_versao="-9" seq_rota="-7"
+		sta_versao_rota="1" txt_observacao_versao="Rota Teste Desativar 1"
+		num_duracao_ciclo="7" dat_desativacao="2013-01-01" />
+	
+	<rota_versao_posto seq_rota_visita_versao="-9"
+		seq_posto_combustivel="-1" />
+</dataset>

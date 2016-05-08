@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="PROJECT">
+	
+	<rota seq_rota="-9" num_rota="9" nom_rota="Teste Desfazer 2"
+		sta_rota="1" TXT_OBSERVACAO_ROTA="" />
+
+	<rota_versao seq_rota_versao="-12" seq_rota="-9"
+		sta_versao_rota="1" txt_observacao_versao="Rota Teste Desfazer 2"
+		num_duracao_ciclo="7" dat_desativacao="2013-01-01" />
+
+	<rota_versao seq_rota_versao="-13" seq_rota="-9"
+		sta_versao_rota="3" txt_observacao_versao="Rota Teste Desfazer 4"
+		num_duracao_ciclo="7" dat_desativacao="2013-01-01" />
+	
+	<rota_versao_posto seq_rota_visita_versao="-12"
+		seq_posto_combustivel="-1" />
+		
+	<rota_versao_posto seq_rota_visita_versao="-13"
+		seq_posto_combustivel="-2" />
+</dataset>

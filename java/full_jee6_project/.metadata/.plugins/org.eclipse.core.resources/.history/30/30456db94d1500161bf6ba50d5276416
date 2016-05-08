@@ -1,0 +1,118 @@
+package br.com.devnagui.project.fiscal.manter;
+
+import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+
+import junit.framework.Assert;
+
+import org.apache.log4j.Logger;
+import org.dbunit.DatabaseUnitException;
+import org.dbunit.database.QueryDataSet;
+import org.dbunit.operation.DatabaseOperation;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.database.annotations.TestDataSource;
+import org.unitils.dbunit.annotation.DataSet;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy;
+import br.com.devnagui.project.ejb.impl.UserBusinessEJB;
+import br.com.devnagui.project.objetodepagina.fiscal.manter.UserPageObject;
+
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class ManagerUserTestSuite {
+
+    private static final Logger LOG = Logger.getLogger(ManagerUserTestSuite.class);
+
+
+    @TestedObject
+    @InjectIntoByType(target = "fiscalManager")
+    private UserBusinessEJB usuarioManager;
+
+    @InjectIntoByType
+    @PersistenceContext(unitName = "test-persistence-unit")
+    private EntityManager entityManager;
+    @TestDataSource
+    private static DataSource dataSource;
+    private WebDriver driver;
+
+    public static final String VALID_USER_REGRISTRATION = "00688711";
+    public static final String VALID_USER_NAME = "ANTONIO VALDIR ROSENO";
+
+    private static final String MATRICULA_USUARIO_INVALIDA = "########";
+    private static final String INVALID_USER_NAME = "####### ####### #######";
+
+    public static final String INSERIR_FISCAL_HABILITADO_XML = "inserirFiscalHabilitado.xml";
+
+    @Before
+    public void openBrowser() throws DatabaseUnitException, SQLException {
+        driver = new FirefoxDriver();
+        driver.manage().timeouts().implicitlyWait(4, TimeUnit.SECONDS);
+    }
+
+    @After
+    public void closeBrowser() throws DatabaseUnitException, SQLException {
+        LOG.info("Finalizando os Testes funcionais.");
+        driver.close();
+        limpaFiscalEHistoricoAnterior();
+    }
+
+    @Test
+    public void testHabilitarFiscalPorMatricula() throws Exception {
+        limpaFiscalEHistoricoAnterior();
+        UserPageObject userPageObject = UserPageObject.getInstance(driver);
+        userPageObject.createNewUser(VALID_USER_REGRISTRATION, VALID_USER_NAME);
+        Assert.assertTrue(userPageObject.isUserValid());
+    }
+
+    @Test
+    public void testHabilitarFiscalPorNome() throws Exception {
+        limpaFiscalEHistoricoAnterior();
+        UserPageObject userPageObject = UserPageObject.getInstance(driver);
+        userPageObject.createNewUser(VALID_USER_NAME, VALID_USER_REGRISTRATION);
+        Assert.assertTrue(userPageObject.isUserValid());
+    }
+
+    @Test
+    @DataSet(value = { INSERIR_FISCAL_HABILITADO_XML }, loadStrategy = InsertOrUpdateWithCommitLoadStrategy.class)
+    public void testDesabilitarFiscal() throws Exception {
+
+        UserPageObject userPageObject = UserPageObject.getInstance(driver);
+        userPageObject.disableUser();
+        Assert.assertTrue(userPageObject.isFiscalDesabilitadoComSucesso());
+    }
+
+    /**
+     * Serve para...
+     * 
+     * @throws SQLException
+     * @throws DatabaseUnitException
+     */
+    private void limpaFiscalEHistoricoAnterior() throws DatabaseUnitException, SQLException {
+        LOG.info("Limpando fiscal e historico anterior");
+        org.dbunit.ext.oracle.OracleConnection connection = new org.dbunit.ext.oracle.OracleConnection(dataSource.getConnection(), "PROJECT");
+
+        QueryDataSet queryDataSet = new QueryDataSet(connection);
+        queryDataSet.addTable("FISCAL", "SELECT F.* FROM PROJECT.FISCAL F JOIN SISSEG.USUARIO U ON F.SEQ_USUARIO = U.SEQ_USUARIO WHERE U.NUM_MATRICULA = '"
+                + VALID_USER_REGRISTRATION + "'");
+        queryDataSet
+                .addTable(
+                        "HISTORICO_HABILITA_FISCAL",
+                        "SELECT HF.* FROM PROJECT.HISTORICO_HABILITA_FISCAL HF JOIN PROJECT.FISCAL F ON HF.SEQ_FISCAL = F.SEQ_FISCAL JOIN SISSEG.USUARIO U ON F.SEQ_USUARIO = U.SEQ_USUARIO WHERE U.NUM_MATRICULA = '"
+                                + VALID_USER_REGRISTRATION + "'");
+        DatabaseOperation.DELETE.execute(connection, queryDataSet);
+        connection.getConnection().commit();
+    }
+}

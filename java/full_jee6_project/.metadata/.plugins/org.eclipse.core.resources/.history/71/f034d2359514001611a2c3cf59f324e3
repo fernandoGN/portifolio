@@ -1,0 +1,27 @@
+package br.com.devnagui.project.dto;
+
+import br.com.devnagui.project.entities.Roteiro;
+import br.com.devnagui.project.vo.FiltroRoteiroVO;
+
+public class PaginaRoteiroDTO extends PageObjectDTO<Roteiro> {
+
+	public PaginaRoteiroDTO(int indicePagina) {
+		super(indicePagina);
+	}
+	
+	public PaginaRoteiroDTO(PageObjectDTO paginaBuscada) {
+		super(paginaBuscada.getIndicePagina());
+		setTamanhoDaPagina(paginaBuscada.getTamanhoDaPagina());
+	}
+
+	private FiltroRoteiroVO filtroRoteiro;
+
+	public FiltroRoteiroVO getFiltroRoteiro() {
+		return filtroRoteiro;
+	}
+
+	public void setFiltroRoteiro(FiltroRoteiroVO filtroRoteiro) {
+		this.filtroRoteiro = filtroRoteiro;
+	}
+
+}

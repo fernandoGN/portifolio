@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{HH:mm:ss,SSS} %5p [%c{10}](Linha %L) %m%n" />
+		</layout>
+	</appender>
+	<appender name="fileAppender" class="org.apache.log4j.FileAppender">
+        <param name="File" value="project/project-test.log" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{HH:mm:ss,SSS} %5p [%c{10}](Linha %L) %m%n"/>
+        </layout>
+    </appender> 
+	<category name="com.faces">
+		<priority value="ERROR" />
+	</category>
+	<category name="com.sun">
+		<priority value="ERROR" />
+	</category>
+	<category name="com.ocpsoft">
+		<priority value="ERROR" />
+	</category>
+	<category name="org.richfaces">
+		<priority value="INFO" />
+	</category>
+	<category name="org.hibernate">
+		<priority value="INFO" />
+	</category>
+	<category name="javax.faces">
+		<priority value="ERROR" />
+	</category>
+	<category name="org.jboss">
+		<priority value="ERROR" />
+	</category>
+	<category name="com.ocpsoft.shade">
+		<priority value="ERROR" />
+	</category>
+	<category name="org.apache">
+		<priority value="ERROR" />
+	</category>
+	<category name="org.apache">
+		<priority value="ERROR" />
+	</category>
+	<category name="org.apache.commons.digester">
+		<priority value="ERROR" />
+	</category>
+	<category name="org.apache.commons.digester.Digester.sax">
+		<priority value="ERROR" />
+	</category>
+	<category name="br.gov.ce">
+		<priority value="INFO,DEBUG,ERROR" />
+	</category>
+
+	<logger name="com.ocpsoft.shade.org.apache.commons.digester.Digester"
+		additivity="false">
+		<level value="ERROR" />
+	</logger>
+	<logger name="org.apache.commons.digester.Digester.sax"
+		additivity="false">
+		<level value="ERROR" />
+	</logger>
+
+	<root>
+		<priority value="WARM,INFO,DEBUG,ERROR" />
+		<appender-ref ref="stdout" />
+		<appender-ref ref="fileAppender"/>
+	</root>
+</log4j:configuration>

@@ -1,0 +1,77 @@
+package br.com.devnagui.project.email.facade;
+
+import java.io.Serializable;
+import java.util.Properties;
+
+import javax.inject.Inject;
+
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.HtmlEmail;
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.email.vo.EmailVO;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.util.factory.PropertiesResource;
+
+public class EmailFacade implements Serializable {
+
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = -5852035981926252645L;
+
+    private static final Logger LOG = Logger.getLogger(EmailFacade.class);
+
+    @Inject
+    @PropertiesResource(name="mail.properties",loader="")
+    private Properties properties;
+
+    /**
+     * Metodo para envio de email de acordo com o objeto de mensagem.
+     * @param para
+     * @throws BusinessException
+     */
+    public void enviarMensagem(final EmailVO emailVO) throws BusinessException {
+        LOG.info("Iniciando envio de email para: " + emailVO.getDestinatarios());
+
+        try {
+
+            Email emailSender = new HtmlEmail();
+            String host = emailVO.getEnderecoServidorEmail();
+            String porta = emailVO.getPorta();
+            LOG.info("Enviando email com host/porta:  " + host + "/" + porta);
+            emailSender.setHostName(host);
+            emailSender.setSmtpPort(Integer.parseInt(porta));
+            String charset = properties.getProperty("mail.charset");
+            LOG.info("Enviando email com charset:  " + charset);
+            emailSender.setCharset(charset);
+            
+            for(String destinatarioAtual:emailVO.getDestinatarios()){
+                emailSender.addTo(destinatarioAtual);
+            }
+//            email.setTLS(true);
+//            email.setAuthenticator(new DefaultAuthenticator("solare", ""));
+            String de = emailVO.getRemetente();
+            LOG.info("Enviando email com de:  " + de);
+            emailSender.setFrom(de);
+
+            String assunto = emailVO.getAssunto();
+            LOG.info("Enviando email com assunto:  " + assunto);
+            emailSender.setSubject(assunto);
+
+            StringBuilder mensagem = emailVO.getMensagem();
+            LOG.info("Enviando email com mensagem:  " + mensagem);
+            emailSender.setMsg(mensagem.toString());
+
+            LOG.info("Realizando envio do email...");
+           
+            emailSender.send();
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+            throw new BusinessException("mensagem.geral.envioEmail",e);
+        }
+        LOG.info("Finalizando envio de email.");
+
+    }
+
+}

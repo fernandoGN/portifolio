@@ -1,0 +1,11 @@
+package br.gov.ce.sefaz.project.manager;
+
+import java.util.List;
+
+import br.gov.ce.sefaz.project.entities.CombustivelVisita;
+
+public interface CombustivelVisitaManager extends GenericoManager<CombustivelVisita> {
+	
+	public List<CombustivelVisita> buscarCombustivelVisitaPorIdVisita(Long id);
+
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:project="PROJECT"  >
+
+	<project:fiscal seq_fiscal="-2" sta_fiscal="0"
+		seq_usuario="9725" />
+
+	<project:historico_habilita_fiscal
+		seq_hist_habilita_fiscal="-2" seq_fiscal="-2" dat_habilitacao="2013-04-22"
+		dat_desabilitacao="2013-04-22" />
+
+</dataset>

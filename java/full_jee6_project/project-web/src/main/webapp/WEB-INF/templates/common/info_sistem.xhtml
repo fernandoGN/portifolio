@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:a="http://richfaces.org/a4j"
+	xmlns:rich="http://richfaces.org/rich">
+	<!--xmlns:s="http://jboss.com/products/seam/taglib"-->
+	<div class="topoSistema">
+		<div class="identificaSistema">
+			<h1><h:outputText styleClass="nomeSistema" value="PROJECT - ite2 - beta3"/></h1>
+		</div>
+		<!-- rendered="#{identity.loggedIn}" -->
+		<h:panelGroup rendered="true" id="panelDadosDoUsuario">
+			<div class="logout">
+				<h:form id="formLogout">
+				<!-- TODO #{segurancaAction.logout}-->
+					<h:commandLink action="sair" title="Sair do Sistema"/>
+				</h:form>
+			</div>
+			<div class="cabecalho">
+				<!-- value="#{usuarioLogado.matricula} - #{usuarioLogado.nome}" -->
+				<h:outputText value="Matricula - Nome do Fulano" styleClass="user" id="loginUsuario"/>
+				<div class="clear_block"></div>
+				<div class="clear_block"></div>
+			</div>
+		</h:panelGroup>
+	</div>
+</ui:composition>

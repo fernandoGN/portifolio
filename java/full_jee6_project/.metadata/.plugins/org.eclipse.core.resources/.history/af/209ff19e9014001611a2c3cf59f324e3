@@ -1,0 +1,69 @@
+package br.gov.ce.sefaz.project.vo;
+
+import java.io.Serializable;
+
+import br.gov.ce.sefaz.project.entities.Bico;
+import br.gov.ce.sefaz.project.entities.LeituraEncerrante;
+
+public class MedicaoBicoVO implements Serializable {
+
+	private static final long serialVersionUID = 3363363921724371181L;
+	
+	private Bico bico;
+	private LeituraEncerrante leituraEncerranteAtual;
+	private LeituraEncerrante leituraEncerranteAnterior;
+	
+	public MedicaoBicoVO() {
+		leituraEncerranteAtual = new LeituraEncerrante();
+	}
+	
+	/**
+	 * @return the bico
+	 */
+	public Bico getBico() {
+		return bico;
+	}
+	/**
+	 * @param bico 
+	 * 				the bico to set
+	 */
+	public void setBico(Bico bico) {
+		this.bico = bico;
+	}
+	
+	/**
+	 * @return the leituraEncerranteAtual
+	 */
+	public LeituraEncerrante getLeituraEncerranteAtual() {
+		return leituraEncerranteAtual;
+	}
+	/**
+	 * @param leituraEncerranteAtual 
+	 * 				the leituraEncerranteAtual to set
+	 */
+	public void setLeituraEncerranteAtual(LeituraEncerrante leituraEncerranteAtual) {
+		this.leituraEncerranteAtual = leituraEncerranteAtual;
+	}
+	/**
+	 * @return the leituraEncerranteAnterior
+	 */
+	public LeituraEncerrante getLeituraEncerranteAnterior() {
+		return leituraEncerranteAnterior;
+	}
+	/**
+	 * @param leituraEncerranteAnterior 
+	 * 				the leituraEncerranteAnterior to set
+	 */
+	public void setLeituraEncerranteAnterior(
+			LeituraEncerrante leituraEncerranteAnterior) {
+		this.leituraEncerranteAnterior = leituraEncerranteAnterior;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "MedicaoBicoVO [bico=" + bico + ", leituraEncerranteAtual=" + leituraEncerranteAtual + ", leituraEncerranteAnterior=" + leituraEncerranteAnterior + "]";
+	}
+	
+}

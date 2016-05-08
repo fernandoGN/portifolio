@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config version="2.0" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="       http://java.sun.com/xml/ns/javaee       http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
+	
+	<navigation-rule>
+		<from-view-id>*.xhtml</from-view-id>
+		<navigation-case>
+			<from-outcome>escolherPosto</from-outcome>
+			<to-view-id>/paginas/postos/manterPostos.xhtml</to-view-id>
+		</navigation-case>
+	</navigation-rule>
+	
+	<navigation-rule>
+		<from-view-id>/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml</from-view-id>
+		<navigation-case>
+			<from-action>#{manterAufericaoEstoqueAction.verificarPostos}</from-action>
+			<from-outcome>SUCESSO</from-outcome>
+			<to-view-id>/paginas/estoqueCombustivel/postosCombustiveis.xhtml</to-view-id>
+			<redirect/>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>*</from-outcome>
+			<to-view-id>/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml</to-view-id>
+			<redirect/>
+		</navigation-case>
+	</navigation-rule>
+	
+	<navigation-rule>
+		<from-view-id>/paginas/estoqueCombustivel/postosCombustiveis.xhtml</from-view-id>
+		<navigation-case>
+			<from-action>#{manterAufericaoEstoqueAction.verificarVisitas}</from-action>
+			<from-outcome>SUCESSO</from-outcome>
+			<to-view-id>/paginas/estoqueCombustivel/postosCombustiveis.xhtml</to-view-id>
+			<redirect/>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>*</from-outcome>
+			<to-view-id>/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml</to-view-id>
+			<redirect/>
+		</navigation-case>
+	</navigation-rule>
+	
+	
+		<navigation-rule>
+			<from-view-id>/paginas/estoqueCombustivel/alterarExcluirVisita.xhtml</from-view-id>
+			<navigation-case>
+				<from-outcome>finalizarVisita</from-outcome>
+				<to-view-id>/paginas/estoqueCombustivel/finalizarVisita.xhtml</to-view-id>
+				<redirect/>
+			</navigation-case>
+			<navigation-case>
+				<from-outcome>erro</from-outcome>
+				<to-view-id>/paginas/estoqueCombustivel/alterarExcluirVisita.xhtml</to-view-id>
+			</navigation-case>
+		</navigation-rule>
+		
+		<navigation-rule>
+			<from-view-id>/paginas/estoqueCombustivel/novaVisita.xhtml</from-view-id>
+			<navigation-case>
+				<from-outcome>finalizarVisita</from-outcome>
+				<to-view-id>/paginas/estoqueCombustivel/finalizarVisita.xhtml</to-view-id>
+				<redirect/>
+			</navigation-case>
+			<navigation-case>
+				<from-outcome>erro</from-outcome>
+				<to-view-id>/paginas/estoqueCombustivel/novaVisita.xhtml</to-view-id>
+			</navigation-case>
+		</navigation-rule>
+		
+		<navigation-rule>
+			<from-view-id>/paginas/estoqueCombustivel/finalizarVisita.xhtml</from-view-id>
+			<navigation-case>
+				<from-outcome>erro</from-outcome>
+				<to-view-id>/paginas/estoqueCombustivel/finalizarVisita.xhtml</to-view-id>
+				<redirect/>
+			</navigation-case>
+			<navigation-case>
+				<from-outcome>auferirEstoquesCombustiveis</from-outcome>
+				<to-view-id>/paginas/estoqueCombustivel/auferirEstoquesCombustiveis.xhtml</to-view-id>
+				<redirect/>
+			</navigation-case>
+		</navigation-rule>
+	<application>
+		<locale-config>
+			<default-locale>pt_BR</default-locale>
+			<supported-locale>pt_BR</supported-locale>
+		</locale-config>
+
+		<resource-bundle>
+			<base-name>mensagens</base-name>
+			<var>msgs</var>
+		</resource-bundle>
+		
+		<resource-bundle>
+			<base-name>labels</base-name>
+			<var>lbls</var>
+		</resource-bundle>
+		
+		
+	</application>
+	<!-- <navigation-rule> <navigation-case> <from-outcome>naoAutorizado</from-outcome> 
+		<to-view-id>/pages/seguranca/naoAutorizado.xhtml</to-view-id> <redirect /> 
+		</navigation-case> <navigation-case> <from-outcome>naoLogado</from-outcome> 
+		<to-view-id>/pages/seguranca/naoLogado.xhtml</to-view-id> <redirect /> </navigation-case> 
+		<navigation-case> <from-outcome>semInterfaceAcao</from-outcome> <to-view-id>/pages/seguranca/semInterfaceAcao.xhtml</to-view-id> 
+		<redirect /> </navigation-case> <navigation-case> <from-outcome>login</from-outcome> 
+		<to-view-id>/login.xhtml</to-view-id> <redirect /> </navigation-case> <navigation-case> 
+		<from-outcome>erroInesperado</from-outcome> <to-view-id>/pages/seguranca/erroInesperado.xhtml</to-view-id> 
+		<redirect /> </navigation-case> <navigation-case> <from-action>#{identity.login()}</from-action> 
+		<if>#{not empty usuarioLogado}</if> <to-view-id>/pages/home.xhtml</to-view-id> 
+		<redirect /> </navigation-case> <navigation-case> <from-action>#{identity.login()}</from-action> 
+		<if>#{empty usuarioLogado}</if> <to-view-id>/erroAutenticacao.xhtml</to-view-id> 
+		<redirect /> </navigation-case> <navigation-case> <from-action>#{identity.logout()}</from-action> 
+		<if>#{true}</if> <to-view-id>/logout.xhtml</to-view-id> <redirect /> </navigation-case> 
+		</navigation-rule> IMPORTAR MANTER POSTOS MANTER ROTAS <factory> <exception-handler-factory>br.com.devnagui.exemplo.jee6.intranet.SiscoexExceptionHandlerFactory</exception-handler-factory> 
+		</factory> -->
+		
+	<factory>
+        <exception-handler-factory>
+            br.com.devnagui.project.action.util.CustomExceptionHandlerFactory
+        </exception-handler-factory>
+	</factory>
+</faces-config>

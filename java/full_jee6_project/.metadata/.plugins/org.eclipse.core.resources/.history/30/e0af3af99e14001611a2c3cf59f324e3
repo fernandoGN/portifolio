@@ -1,0 +1,21 @@
+/**
+ * Criado por 006157C6 em 03/04/2013
+ */
+package br.com.devnagui.project.manager;
+
+import java.util.List;
+import java.util.Set;
+
+import br.com.devnagui.project.entities.Bico;
+
+/**
+ * Criado por @author 006157C6 em 03/04/2013
+ * 
+ */
+public interface BicoManager extends GenericoManager<Bico> {
+
+	List<Bico> obterBicosDoPosto(Long idPosto);
+
+	public List<Bico> obterBicosDoPostoPorProdutoCombustivel(Long idPosto, Set<Long> tiposCombustiveis);
+	
+}

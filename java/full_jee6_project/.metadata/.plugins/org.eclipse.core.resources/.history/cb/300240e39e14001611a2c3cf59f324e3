@@ -1,0 +1,39 @@
+/**
+ * Criado por 006157C6 em 28/03/2013
+ */
+package br.com.devnagui.project.enums;
+
+/**
+ * Criado por @author 006157C6 em 28/03/2013
+ * 
+ */
+
+public enum TipoMedicaoBomba {
+	ANALOGICO(0, "Analógico"), DIGITAL(1, "Digital");
+
+	/**
+	 * 
+	 */
+	private TipoMedicaoBomba(final int valor, final String descricao) {
+		this.valor = valor;
+		this.descricao = descricao;
+	}
+
+	private int valor;
+	private String descricao;
+
+	/**
+	 * @return the descricao
+	 */
+	public String getDescricao() {
+		return descricao;
+	}
+
+	/**
+	 * @return the valor
+	 */
+	public int getValor() {
+		return valor;
+	}
+
+}

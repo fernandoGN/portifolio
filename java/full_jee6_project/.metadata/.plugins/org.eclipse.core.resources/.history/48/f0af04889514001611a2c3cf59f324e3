@@ -1,0 +1,293 @@
+package br.com.devnagui.project.manager.rota.manter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import junit.framework.Assert;
+
+import org.apache.log4j.Logger;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.dbunit.annotation.DataSet;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.com.devnagui.project.dto.PageObjectDTO;
+import br.com.devnagui.project.entities.PostoCombustivel;
+import br.com.devnagui.project.entities.Rota;
+import br.com.devnagui.project.entities.RotaVersao;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.manager.impl.PostoCombustivelManagerBean;
+import br.com.devnagui.project.manager.impl.RotaManagerBean;
+import br.com.devnagui.project.manager.impl.RotaVersaoManagerBean;
+
+/**
+ * 
+ * Criado por @author 006159C0 em 12/04/2013
+ *
+ */
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+public class RotaVersaoManagerBeanTest {
+
+	private static final Logger LOG = Logger.getLogger(RotaVersaoManagerBeanTest.class);
+
+	/**
+	 * Arquivos .xml DataSet.
+	 */
+	private static final String ATIVAR_ROTA_VERSAO_1_XML = "ativarRotaVersao1.xml";
+	private static final String ATIVAR_ROTA_VERSAO_2_XML = "ativarRotaVersao2.xml";
+	private static final String DESFAZER_ROTA_VERSAO_1_XML = "desfazerRotaVersao1.xml";
+	private static final String DESFAZER_ROTA_VERSAO_2_XML = "desfazerRotaVersao2.xml";
+	private static final String DESATIVAR_ROTA_VERSAO_XML = "desativarRotaVersao.xml";
+	private static final String BUSCAR_POSTO_COMBUSTIVEL_XML = "buscarPostoCombustivel.xml";
+	private static final String ROTA_VERSAO_XML = "rotaVersao.xml";
+	
+	@TestedObject
+	@InjectIntoByType(target = "rotaVersaoManagerBean")
+	private RotaManagerBean rotaManagerBean;
+	
+	@TestedObject
+	@InjectIntoByType(target = "rotaManagerBean")
+	private RotaVersaoManagerBean rotaVersaoManagerBean;
+	
+	@TestedObject
+	private PostoCombustivelManagerBean postoCombustivelManagerBean;
+
+	@InjectIntoByType
+	@PersistenceContext(unitName = "test-persistence-unit")
+	private EntityManager entityManager;
+	
+	/**
+	 * Teste que simula o ativar uma rota que basicamente � atualizado a sua rota vers�o.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, ATIVAR_ROTA_VERSAO_1_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testAtivarRoTaVersaoSucesso() throws BusinessException {
+		LOG.info("Testando ativar Rota Vers�o Sucesso.");
+		RotaVersao rotaVersao = new RotaVersao();
+		rotaVersao = rotaVersaoManagerBean.buscar(-5L);
+		
+		rotaVersaoManagerBean.ativar(rotaVersao, null);
+			
+		Assert.assertEquals(1, rotaVersao.getStatus().intValue());
+	}
+	
+	/**
+	 * Teste que simula o ativar uma rota que basicamente � atualizado a sua rota vers�o.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, ATIVAR_ROTA_VERSAO_2_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testAtivarRotaVersaoSucesso2() throws BusinessException {
+		LOG.info("Testando ativar Rota Vers�o Sucesso.");
+		RotaVersao rotaVersaoEmEdicao = new RotaVersao();
+		RotaVersao rotaVersaoAtiva = new RotaVersao();
+		rotaVersaoEmEdicao = rotaVersaoManagerBean.buscaVersaoEmEdicao(-5L);
+		rotaVersaoAtiva = rotaVersaoManagerBean.buscaVersaoAtiva(-5L);
+		
+		rotaVersaoManagerBean.ativar(rotaVersaoEmEdicao, rotaVersaoAtiva);
+	}
+	
+	/**
+	 * Teste que simula o desfazer ativa��o de uma rota que basicamente � atualizado a sua rota vers�o.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, DESFAZER_ROTA_VERSAO_1_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testDesfazerAtivacaoRotaVersaoSucesso1() throws BusinessException {
+		LOG.info("Testando desfazer ativa��o Rota Vers�o Sucesso.");
+		RotaVersao rotaVersaoAtiva = new RotaVersao();
+		RotaVersao rotaVersaoDesativada = new RotaVersao();
+		rotaVersaoAtiva = rotaVersaoManagerBean.buscaVersaoAtiva(-8L);
+		rotaVersaoDesativada = rotaVersaoManagerBean.buscaVersaoDesativada(-8L);
+		
+		rotaVersaoManagerBean.desfazer(rotaVersaoDesativada, rotaVersaoAtiva);
+	}
+	
+	/**
+	 * Teste que simula o desfazer ativa��o de uma rota que basicamente � atualizado a sua rota vers�o.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, DESFAZER_ROTA_VERSAO_2_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testDesfazerAtivacaoRotaVersaoSucesso2() throws BusinessException {
+		LOG.info("Testando desfazer ativa��o Rota Vers�o Sucesso.");
+		RotaVersao rotaVersaoAtiva = new RotaVersao();
+		RotaVersao rotaVersaoDesativada = new RotaVersao();
+		rotaVersaoAtiva = rotaVersaoManagerBean.buscaVersaoAtiva(-9L);
+		rotaVersaoDesativada = rotaVersaoManagerBean.buscaVersaoDesativada(-9L);
+		
+		rotaVersaoManagerBean.desfazer(rotaVersaoDesativada, rotaVersaoAtiva);
+	}
+	
+	/**
+	 * Teste que simula o desativar de uma rota que basicamente � atualizado as suas rotas vers�es,
+	 * tanto com status ativo e em edi��o.
+	 * 
+	 * @throws BusinessException
+	 */
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, DESATIVAR_ROTA_VERSAO_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testDesativarRotaVersaoSucesso() throws BusinessException {
+		LOG.info("Testando desativar Rota Vers�o Sucesso.");
+		Rota rota = new Rota();
+		rota = rotaManagerBean.buscar(-7L);
+		rotaVersaoManagerBean.desativar(rota);
+	}
+	
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, ROTA_VERSAO_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testBuscarVersoes() throws BusinessException {
+		LOG.info("Buscar todas as vers�es daquela rota.");
+		List<RotaVersao> versoes = new ArrayList<RotaVersao>();
+		versoes = rotaVersaoManagerBean.buscaVersoes(-12L);
+		if(!versoes.isEmpty())
+			Assert.assertTrue(true);
+	}
+	
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, ROTA_VERSAO_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testBuscarVesoesAtivaEEmEdicao() {
+		LOG.info("Buscar a vers�o ativa e em edi��o daquela rota.");
+		List<RotaVersao> versoes = new ArrayList<RotaVersao>();
+		versoes = rotaVersaoManagerBean.buscaVersaoAtivaEEmEdicao(-12L);
+		if(!versoes.isEmpty())
+			Assert.assertTrue(true);
+	}
+	
+	@Test
+	@DataSet(value = { BUSCAR_POSTO_COMBUSTIVEL_XML, ROTA_VERSAO_XML }, loadStrategy = br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class)
+	public void testBuscarVesoesAtivaOuEmEdicao() {
+		LOG.info("Buscar a vers�o ativa ou em edi��o daquela rota.");
+		RotaVersao versao = new RotaVersao();
+		versao = rotaVersaoManagerBean.buscaVersaoAtivaOuEmEdicao(-12L);
+		if(versao != null)
+			Assert.assertTrue(true);
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesDuracaoNull() throws BusinessException {
+		LOG.info("Validacoes da Dura��o null.");
+		Integer duracao = null;
+		try {
+			rotaVersaoManagerBean.validarDuracao(duracao);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesDuracaoIgualZero() throws BusinessException {
+		LOG.info("Validacoes da Dura��o igual a zero.");
+		Integer duracao = 0;
+		try {
+			rotaVersaoManagerBean.validarDuracao(duracao);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesDuracaoMaiorQue999() throws BusinessException {
+		LOG.info("Validacoes da Dura��o maior que 999.");
+		Integer duracao = 1000;
+		try {
+			rotaVersaoManagerBean.validarDuracao(duracao);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesObservacaoMaior300Caracteres() throws BusinessException {
+		LOG.info("Validacoes da Observa��o com mais de 300 caracteres.");
+		String observacao = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+							"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+		try {
+			rotaVersaoManagerBean.validarObservacao(observacao);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesListaPostosNull() throws BusinessException {
+		LOG.info("Validacoes da Lista Postos null.");
+		List<PostoCombustivel> postos = null;
+		try {
+			rotaVersaoManagerBean.validarListaPostos(postos);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesListaPostosVazia() throws BusinessException {
+		LOG.info("Validacoes da Lista Postos vazia.");
+		List<PostoCombustivel> postos = new ArrayList<PostoCombustivel>();
+		try {
+			rotaVersaoManagerBean.validarListaPostos(postos);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesStatusNull() throws BusinessException {
+		LOG.info("Validacoes da Status null.");
+		Integer status = null;
+		try {
+			rotaVersaoManagerBean.validarStatus(status);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesStatusNaoSendo1Ou2Ou3() throws BusinessException {
+		LOG.info("Validacoes da Status null.");
+		Integer status = 4;
+		try {
+			rotaVersaoManagerBean.validarStatus(status);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test(expected = BusinessException.class)
+	public void testValidacoesRotaNull() throws BusinessException {
+		LOG.info("Validacoes da Status null.");
+		Rota rota = null;
+		try {
+			rotaVersaoManagerBean.validarRota(rota);
+		} catch (BusinessException e) {
+			throw new BusinessException(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testObterListaPaginada() throws BusinessException {
+		PageObjectDTO<RotaVersao> rotaVersoes = new PageObjectDTO<RotaVersao>(1);
+		rotaVersoes = rotaVersaoManagerBean.obterListaPaginadaDeRotasVersoesAtivas(rotaVersoes);
+		Assert.assertTrue(rotaVersoes.getDados().size() > 0);
+	}
+	
+}

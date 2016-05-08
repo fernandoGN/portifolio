@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cadastro="CADASTRO">
+	<!-- datas no formato yyyy-mm-dd -->
+
+	<cadastro:CONTRIBUINTE SEQ_CONTRIBUINTE="1" COD_CNPJ="7116510000178" NOM_RAZAO_SOCIAL="POSTO IOLANDA LTDA" 
+	COD_CAE_NACIONAL="4731800" COD_SITUACAO_CONTRIBUINTE="1" COD_CGF="60050276" COD_UF="23"  COD_MUNICIPIO="10258"
+	NOM_LOGRADOURO="AV. MARIA MOREIRA" NUM_CEP="62687000" NUM_LOGRADOURO="00350" NOM_COMPLEMENTO="[null]"
+	NOM_BAIRRO="CENTRO" />
+	
+</dataset>

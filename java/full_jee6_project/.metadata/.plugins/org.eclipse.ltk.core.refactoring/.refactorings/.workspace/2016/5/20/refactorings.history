@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;project-web/.settings/org.eclipse.wst.common.project.facet.core.prefs.xml&apos;" deleteContents="false" description="Delete resource &apos;project-web/.settings/org.eclipse.wst.common.project.facet.core.prefs.xml&apos;" element1="/project-web/.settings/org.eclipse.wst.common.project.facet.core.prefs.xml" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1462678335176"/>
+</session>

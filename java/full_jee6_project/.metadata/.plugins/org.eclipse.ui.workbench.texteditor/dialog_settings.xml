@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item value="724" key="DIALOG_X_ORIGIN"/>
+		<item value="394" key="DIALOG_Y_ORIGIN"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="false" key="isRegEx"/>
+		<item value="" key="selection"/>
+		<item value="true" key="casesensitive"/>
+		<item value="false" key="incremental"/>
+		<item value="true" key="wrap"/>
+		<item value="true" key="wholeword"/>
+		<list key="findhistory">
+			<item value="retornaRaizNavegacao"/>
+			<item value="egacao"/>
+			<item value="a"/>
+			<item value="�"/>
+			<item value="${selenium.version}"/>
+			<item value="&#x09;2.52.0"/>
+			<item value="seleni"/>
+			<item value="junit"/>
+		</list>
+		<list key="replacehistory">
+			<item value="a"/>
+			<item value="&#x09;2.52.0"/>
+			<item value="User"/>
+			<item value="getEntityManager()"/>
+			<item value="br.gov.ce.sefaz"/>
+			<item value="br.gov.ce.sefaz.nfecorp"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item value="299" key="DIALOG_WIDTH"/>
+		<item value="1|Ubuntu|10.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
+		<item value="445" key="DIALOG_HEIGHT"/>
+		<item value="1228" key="DIALOG_X_ORIGIN"/>
+		<item value="231" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>

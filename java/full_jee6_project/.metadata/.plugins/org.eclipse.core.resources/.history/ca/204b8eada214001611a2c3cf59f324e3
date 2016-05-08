@@ -1,0 +1,42 @@
+package br.com.devnagui.project.dto;
+
+/**
+ * 
+ * @author 006158C3
+ *
+ */
+public class ArquivoDTO {
+
+	private int length;
+	private String name;
+	private byte[] data;
+
+	public ArquivoDTO() {
+
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public void setLength(int length) {
+		this.length = length;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public byte[] getData() {
+		return data;
+	}
+
+	public void setData(byte[] data) {
+		this.data = data;
+	}
+
+}

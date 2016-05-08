@@ -1,0 +1,13 @@
+package br.gov.ce.project.manager.roteiro;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+import br.gov.ce.project.manager.roteiro.manter.RoteiroManagerBeanTest;
+
+@RunWith(Suite.class)
+@SuiteClasses({ RoteiroManagerBeanTest.class })
+public class RoteiroSuiteDeTestes {
+
+}

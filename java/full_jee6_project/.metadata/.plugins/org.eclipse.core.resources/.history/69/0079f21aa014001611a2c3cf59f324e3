@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns:dflt="PROJECT">
+	<xsd:import namespace="PROJECT" schemaLocation="PROJECT.xsd" />
+	<xsd:import namespace="CADASTRO" schemaLocation="CADASTRO.xsd" />
+	<xsd:import namespace="SETA" schemaLocation="SETA.xsd" />
+	<xsd:import namespace="SISSEG" schemaLocation="SISSEG.xsd" />
+	<xsd:element name="dataset">
+		<xsd:complexType>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element name="PRODUTO_COMBUSTIVEL" type="dflt:PRODUTO_COMBUSTIVEL__type" />
+				<xsd:element name="COMBUSTIVEL_VISITA" type="dflt:COMBUSTIVEL_VISITA__type" />
+				<xsd:element name="BICO" type="dflt:BICO__type" />
+				<xsd:element name="MEDICAO_TANQUE" type="dflt:MEDICAO_TANQUE__type" />
+				<xsd:element name="LEITURA_ENCERRANTE" type="dflt:LEITURA_ENCERRANTE__type" />
+				<xsd:element name="ROTA" type="dflt:ROTA__type" />
+				<xsd:element name="TANQUE" type="dflt:TANQUE__type" />
+				<xsd:element name="POSTO_COMBUSTIVEL" type="dflt:POSTO_COMBUSTIVEL__type" />
+				<xsd:element name="ROTA_VERSAO" type="dflt:ROTA_VERSAO__type" />
+				<xsd:element name="VISITA" type="dflt:VISITA__type" />
+				<xsd:element name="ITEM_NFE_ENTRADA" type="dflt:ITEM_NFE_ENTRADA__type" />
+				<xsd:element name="ROTEIRO" type="dflt:ROTEIRO__type" />
+				<xsd:element name="ROTA_VERSAO_POSTO" type="dflt:ROTA_VERSAO_POSTO__type" />
+				<xsd:element name="HISTORICO_HABILITA_FISCAL" type="dflt:HISTORICO_HABILITA_FISCAL__type" />
+				<xsd:element name="BOMBA" type="dflt:BOMBA__type" />
+				<xsd:element name="FISCAL" type="dflt:FISCAL__type" />
+				<xsd:element name="NFE_ENTRADA" type="dflt:NFE_ENTRADA__type" />
+				<xsd:element name="IMPORTACAO_POSTO_ANP" type="dflt:IMPORTACAO_POSTO_ANP__type" />
+				<xsd:element name="LACRE_BOMBA" type="dflt:LACRE_BOMBA__type" />
+				<xsd:element name="BANDEIRA_POSTO" type="dflt:BANDEIRA_POSTO__type" />
+				<xsd:any namespace="PROJECT" />
+			</xsd:choice>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

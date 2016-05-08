@@ -1,0 +1,300 @@
+package br.com.devnagui.project.manager.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.log4j.Logger;
+
+import br.com.devnagui.project.dto.PageObjectDTO;
+import br.com.devnagui.project.entities.Fiscal;
+import br.com.devnagui.project.entities.HistoricoHabilitaFiscal;
+import br.com.devnagui.project.entities.Usuario;
+import br.com.devnagui.project.enums.SituacaoFiscal;
+import br.com.devnagui.project.manager.FiscalManager;
+import br.com.devnagui.project.manager.UsuarioManager;
+import br.com.devnagui.project.manager.exception.BusinessException;
+
+/**
+ * Criado por @author 006159C0 em 11/03/2013
+ * 
+ */
+@Stateless
+public class FiscalManagerBean extends GenericManagerBean<Fiscal> implements FiscalManager {
+
+	private static final long serialVersionUID = 6074189587049116969L;
+	
+	private static final Logger LOG = Logger.getLogger(FiscalManagerBean.class);
+	
+	private static final int NUMERO_MAXIMO_RETORNADO_QUERY_AUTOCOMPLETE = 20;
+	
+	@EJB
+	private UsuarioManager usuarioManager;
+	
+	// METODOS PUBLICOS
+	
+    /**
+	 * Sobrescrito para adicionar valida��es na entidade. 
+	 */
+	@Override
+	public void inserir(Fiscal entidade) throws BusinessException {
+		this.validarFiscal(entidade);
+		this.usuarioManager.validarUsuario(entidade.getUsuario());
+		super.inserir(entidade);
+	}
+	
+	/**
+	 * Sobrescrito para adicionar valida��es na entidade. 
+	 */
+	@Override
+	public Fiscal update(Fiscal entidade) throws BusinessException {
+		this.validarFiscal(entidade);
+		this.usuarioManager.validarUsuario(entidade.getUsuario());
+		return super.update(entidade);
+	}
+	
+	/**
+	 * M�todo que monta as condi��es do where, para buscar apenas fiscais habilitados
+	 * 
+	 * @return {@link Predicate}
+	 */
+	@Override
+	protected Predicate construirCondicoesWhere(final CriteriaBuilder builder, final Root<Fiscal> entidadeRoot, PageObjectDTO<Fiscal> paginacao) {
+		Path<Object> situacaoFiscal = entidadeRoot.get(Fiscal.SITUACAO_FISCAL_ATTRIBUTE);
+		return builder.equal(situacaoFiscal, SituacaoFiscal.HABILITADO);
+	}
+		
+	/**
+	 * M�todo que valida, habilita o Fiscal e registra isso no seu hist�rico.
+	 * 
+	 * @param fiscal
+	 */
+	@Override
+	public void habilitarFiscal(Fiscal fiscal) throws BusinessException {
+		this.validarFiscal(fiscal);
+		this.usuarioManager.validarUsuario(fiscal.getUsuario());
+		
+		fiscal = this.carregarFiscal(fiscal);
+		this.verificarSeFiscalJaHabilitado(fiscal);
+		
+		final Date dataHabilitacao = new Date();
+		fiscal.adicionarHistoricoHabilitaFiscal(new HistoricoHabilitaFiscal(fiscal, dataHabilitacao));
+		fiscal.setSituacaoFiscal(SituacaoFiscal.HABILITADO);
+		
+		this.salvar(fiscal);
+	}
+	
+	/**
+	 * M�todo que valida, desabilita o Fiscal e registra isso no seu hist�rico.
+	 * 
+	 * @param fiscal
+	 * @throws BusinessException 
+	 */
+	@Override
+	public void desabilitarFiscal(Fiscal fiscal) throws BusinessException{
+		this.validarFiscal(fiscal);
+		this.validarFiscalSelecionado(fiscal);
+		this.verificarSeFiscalJaDesabilitado(fiscal);
+		
+		final Date dataDesabilitacao = new Date();
+		final HistoricoHabilitaFiscal historicoVigente = this.obterHistoricoVigenteFiscalHabilitado(fiscal);
+		historicoVigente.setDataDesabilitacao(dataDesabilitacao);
+		fiscal.setSituacaoFiscal(SituacaoFiscal.DESABILITADO);
+		
+		this.salvar(fiscal);
+	}
+	
+	/**
+	 * M�todo que valida o objeto fiscal.
+	 * 
+	 * @param fiscal
+	 * @throws BusinessException
+	 */
+	@Override
+	public void validarFiscal(Fiscal fiscal) throws BusinessException {
+		if( fiscal == null ){
+			throw new BusinessException("mensagem.fiscal.null");
+		}
+	}
+
+	/**
+	 * M�todo que busca apenas fiscais com uma matr�cula espec�fica
+	 * 
+	 * @param matriculaUsuario
+	 * @return {@link Fiscal}
+	 */
+	@Override
+	public Fiscal obterFiscalPorMatriculaUsuario(String matriculaUsuario) {
+		try {
+			TypedQuery<Fiscal> query = getEntityManager().createNamedQuery(Fiscal.QUERY_BUSCAR_FISCAL_POR_MATRICULA_USUARIO_FETCH_HISTORICOS, Fiscal.class);
+			query.setParameter("matriculaUsuario", matriculaUsuario);
+			return query.getSingleResult();
+		} catch (NoResultException e) {
+			LOG.error("Excecao esperada caso ainda nao exista fiscal.",e);
+		}
+		
+		return criarNovoFiscal();
+	}
+		
+	/**
+	 * M�todo que verifica se o fiscal j� est� habilitado, se sim, lan�a exce��o.
+	 * 
+	 * @param fiscal
+	 * @throws BusinessException
+	 */
+	@Override
+	public void verificarSeFiscalJaHabilitado(Fiscal fiscal) throws BusinessException {
+		final boolean isFiscalNovo = fiscal.getId() == null;
+		final boolean isFiscalHabilitado = fiscal != null && !isFiscalNovo && fiscal.getSituacaoFiscal().equals(SituacaoFiscal.HABILITADO);
+		
+		if(isFiscalHabilitado){
+			throw new BusinessException("mensagem.fiscal.ja.habilitado");
+		}
+	}
+	
+	/**
+	 * M�todo que verifica se o fiscal j� est� desabilitado, se sim, lan�a exce��o.
+	 * 
+	 * @param fiscal
+	 * @throws BusinessException
+	 */
+	@Override
+	public void verificarSeFiscalJaDesabilitado(Fiscal fiscal) throws BusinessException {
+		final boolean isFiscalDesabilitado = fiscal.getSituacaoFiscal().equals(SituacaoFiscal.DESABILITADO);
+		
+		if(isFiscalDesabilitado){
+			throw new BusinessException("mensagem.fiscal.ja.desabilitado");
+		}
+	}
+	
+	/**
+	 * M�todo que verifica se existe algum fiscal selecionado, se n�o, lan�a exce��o.
+	 * 
+	 * @param fiscal
+	 * @throws BusinessException
+	 */
+	@Override
+	public void validarFiscalSelecionado(Fiscal fiscal) throws BusinessException {
+		final boolean fiscalPossuiHistorico = !fiscal.getHistoricoHabilitacaoFiscal().isEmpty();
+		final boolean existeFiscalSelecionado = fiscal.getId() != null && fiscalPossuiHistorico; 
+		
+		if( !existeFiscalSelecionado ){
+			throw new BusinessException("mensagem.fiscal.nao.selecionado.para.desabilitacao");
+		}
+	}
+	
+	/**
+	 * M�todo que percorre a lista de hist�rico do fiscal e retorna o hist�rico vigente, ou seja, o que ainda n�o possu� data de desabilita��o.
+	 * 
+	 * @param fiscal
+	 * @return {@link HistoricoHabilitaFiscal}
+	 */
+	@Override
+	public HistoricoHabilitaFiscal obterHistoricoVigenteFiscalHabilitado(Fiscal fiscal) throws BusinessException {
+		final boolean isFiscalHabilitado = fiscal.getSituacaoFiscal().equals(SituacaoFiscal.HABILITADO);
+		
+		if(isFiscalHabilitado){
+			for(HistoricoHabilitaFiscal historico: fiscal.getHistoricoHabilitacaoFiscal()){
+				if(historico.getDataDesabilitacao() == null){
+					return historico;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	// METODOS PRIVADOS
+	
+	/**
+	 * M�todo que salva o fiscal, antes verificando se � preciso inserir ou alterar.
+	 * 
+	 * @param fiscal
+	 * @throws BusinessException
+	 */
+	private void salvar(Fiscal fiscal) throws BusinessException {
+		final boolean isNovoFiscal = fiscal.getId() == null;
+		
+		if(isNovoFiscal){
+			this.inserir(fiscal);
+		}else{
+			this.update(fiscal);
+		}
+		LOG.info("Inseriu no banco com sucesso");
+	}
+
+	/**
+	 * M�todo que procura o fiscal passado por par�metro no banco, com base na sua matricula de usu�rio, caso exista, 
+	 * o objeto encontrado � retornado, se n�o existir a referencia passada por parametro � retornada.
+	 * 
+	 * @param fiscal
+	 * @return {@link Fiscal}
+	 * @throws BusinessException
+	 */
+	private Fiscal carregarFiscal(Fiscal fiscal) throws BusinessException {
+		final String matriculaUsuario = fiscal.getUsuario().getMatricula();
+		final Fiscal fiscalCadastrado = this.obterFiscalPorMatriculaUsuario(matriculaUsuario);
+		final boolean existeFiscalCadastrado = fiscalCadastrado.getId() != null;
+		
+		if(existeFiscalCadastrado){
+			return fiscalCadastrado;
+		}
+		
+		return fiscal;
+	}
+	
+	/**
+	 * Inst�ncia um novo fiscal
+	 * 
+	 * @return fiscal
+	 */
+	private Fiscal criarNovoFiscal() {
+		final Fiscal fiscal = new Fiscal();
+		fiscal.setUsuario(new Usuario());
+		fiscal.setHistoricoHabilitacaoFiscal(new ArrayList<HistoricoHabilitaFiscal>());
+		return fiscal;
+	}
+
+	/**
+	 * M�todo que busca todos Fiscais Habilitados no sistema.
+	 * 
+	 * @return List<Fiscal>
+	 */
+	@Override
+	public List<Fiscal> listarFicaisHabilitados() {
+		LOG.info("Obtendo as rotas vers�es ativas");
+		TypedQuery<Fiscal> query = getEntityManager().createNamedQuery(Fiscal.QUERY_LISTAR_FISCAIS_HABILITADOS, Fiscal.class);
+		query.setParameter("situacaoFiscal", SituacaoFiscal.HABILITADO);
+		
+		if (!query.getResultList().isEmpty())
+			return query.getResultList();
+		else
+			return null;
+	}
+
+	/**
+	 * M�todo que busca fiscais com matr�cula que contenham, como prefixo, a matr�cula passada como par�metro.
+	 * 
+	 * @param matricula do usu�rio
+	 * 
+	 * @return List<Usuario>
+	 */
+	@Override
+	public List<Fiscal> obterFiscalPorMatriculaOuNome(String paramBusca) {
+		final String LIKE = "%";
+		TypedQuery<Fiscal> query = getEntityManager().createNamedQuery(Fiscal.QUERY_BUSCAR_FISCAIS_POR_NOME_OU_MATRICULA, Fiscal.class);
+		query.setParameter("param", (paramBusca != null ? paramBusca.toUpperCase() : "") + LIKE);
+		query.setParameter("param",LIKE+ (paramBusca != null ? paramBusca.toUpperCase() : "") + LIKE);
+		query.setMaxResults(NUMERO_MAXIMO_RETORNADO_QUERY_AUTOCOMPLETE);
+		return query.getResultList();
+	}
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:project="PROJECT">
+	<!-- datas no formato yyyy-mm-dd -->
+
+	<project:ITEM_NFE_ENTRADA SEQ_ITEM_NFE_ENTRADA="999"
+		SEQ_NFE_ENTRADA="999" SEQ_VISITA="1" 
+		SEQ_PRODUTO_COMBUSTIVEL="14" 
+		NUM_ITEM_NF="1"  QTD_ITEM_ENTRADA="2" 
+		STA_REGISTRO_ITEM="1"/>
+		
+</dataset>

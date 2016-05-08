@@ -1,0 +1,71 @@
+package br.gov.ce.sefaz.project.objetodepagina.roteiro.manter;
+
+import org.apache.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+
+import br.gov.ce.sefaz.project.entities.Roteiro;
+import br.gov.ce.sefaz.project.objetodepagina.MenuConvarObjetoDePagina;
+import br.gov.ce.sefaz.project.objetodepagina.richfaces.tabela.paginacao.ExecutadorDeAcaoTabelaRichfacesHandler;
+import br.gov.ce.sefaz.project.objetodepagina.richfaces.tabela.paginacao.TabelaPaginadaRichfacesHandler;
+
+/**
+ * Objeto responsavel por conhecer a lógica de acesso e manipulação dos
+ * elementos das paginas do caso de uso de manter roteiro - subfluxo
+ * alterar/excluir roteiro.
+ * 
+ * @author 006157C6
+ * 
+ */
+public class AlterarExcluirRoteiroObjetoDePagina extends MenuConvarObjetoDePagina {
+    private static final Logger LOG = Logger.getLogger(AlterarExcluirRoteiroObjetoDePagina.class);
+
+    public AlterarExcluirRoteiroObjetoDePagina(WebDriver driver) throws Exception {
+        super(driver);
+    }
+
+    /**
+     * Exclui um roteiro conforme a matricula do fiscal informado.
+     * 
+     * @param roteiroAlvo
+     *            Roteiro com o fiscal alvo.
+     * @return O proprio objeto de pagina.
+     * @throws InterruptedException
+     *             Caso não seja encontrado algum elemento da pagina usado na
+     *             navegacao.
+     */
+    public AlterarExcluirRoteiroObjetoDePagina excluirRoteiro(final Roteiro roteiroAlvo) throws InterruptedException {
+
+        TabelaPaginadaRichfacesHandler tabelaRoteiroHandler = new TabelaPaginadaRichfacesHandler(driver, "tabela", "colunaMatricula", "radioUsuario",
+                "dataScroll", roteiroAlvo.getFiscal().getUsuario().getMatricula(), new ExecutadorDeAcaoTabelaRichfacesHandler() {
+                    @Override
+                    public void realizarAcao(final WebDriver driver, final String idColunaDeAcao) {
+                        driver.findElement(By.id(idColunaDeAcao + ":0")).click();
+                    }
+                });
+        tabelaRoteiroHandler.realizarBuscaEAcao();
+        PageFactory.initElements(driver, this);
+        
+        esperarRenderizarElementoPor(By.id("excluir"));
+        driver.findElement(By.id("excluir")).click();
+        esperarRenderizarElementoPor(By.id("simExcluir"));
+        driver.findElement(By.id("simExcluir")).click();
+        PageFactory.initElements(driver, this);
+        return this;
+    }
+
+    /**
+     * @return
+     * @throws InterruptedException 
+     */
+    public boolean isRoteiroExcluidoComSucesso() throws InterruptedException {
+        esperarRenderizarElementoPor(By.xpath("//li[@class=\"success\"]"));
+        String mensagem = driver.findElement(By.xpath("//li[@class=\"success\"]")).getText();
+        LOG.info("Mensagem de sucesso: " + mensagem);
+        return mensagem.contains("Excluído com sucesso.");
+    }
+
+}

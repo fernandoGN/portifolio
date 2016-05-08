@@ -1,0 +1,72 @@
+package br.gov.ce.sefaz.project.email.vo;
+
+import java.io.Serializable;
+import java.util.List;
+
+public class EmailVO implements Serializable {
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 3115246028343020268L;
+
+    private List<String> destinatarios;
+    private String remetente;
+    private String assunto;
+    private String enderecoServidorEmail;
+    private String porta;
+    
+    /**
+     * Mensagem, aceita marcações HTML segundo a especificação da API Commons Email.
+     */
+    private StringBuilder mensagem;
+    
+
+    public List<String> getDestinatarios() {
+        return destinatarios;
+    }
+
+    public void setDestinatarios(List<String> destinatarios) {
+        this.destinatarios = destinatarios;
+    }
+
+    public String getAssunto() {
+        return assunto;
+    }
+
+    public void setAssunto(String assunto) {
+        this.assunto = assunto;
+    }
+
+    public StringBuilder getMensagem() {
+        return mensagem;
+    }
+
+    public void setMensagem(StringBuilder mensagem) {
+        this.mensagem = mensagem;
+    }
+ 
+    public String getRemetente() {
+        return remetente;
+    }
+
+    public void setRemetente(String remetente) {
+        this.remetente = remetente;
+    }
+
+    public String getEnderecoServidorEmail() {
+        return enderecoServidorEmail;
+    }
+
+    public void setEnderecoServidorEmail(String enderecoServidorEmail) {
+        this.enderecoServidorEmail = enderecoServidorEmail;
+    }
+
+    public String getPorta() {
+        return porta;
+    }
+
+    public void setPorta(String porta) {
+        this.porta = porta;
+    }
+
+}

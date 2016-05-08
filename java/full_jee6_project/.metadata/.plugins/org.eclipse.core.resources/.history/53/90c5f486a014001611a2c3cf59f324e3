@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:sisseg="SISSEG" >
+   
+    <sisseg:usuario seq_usuario="2" NOM_USUARIO="usuario 2 dos testes" NUM_MATRICULA="99999" />
+    <sisseg:usuario seq_usuario="4" NOM_USUARIO="usuario 4 dos testes" NUM_MATRICULA="99994" />
+    <sisseg:usuario seq_usuario="99" NOM_USUARIO="ANTONIO VALDIR ROSENO" NUM_MATRICULA="00688711" />
+    
+    
+</dataset>

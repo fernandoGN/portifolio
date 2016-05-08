@@ -1,0 +1,27 @@
+package br.gov.ce.sefaz.project.dto;
+
+import br.gov.ce.sefaz.project.entities.Roteiro;
+import br.gov.ce.sefaz.project.vo.FiltroRoteiroVO;
+
+public class PaginaRoteiroDTO extends PaginaDTO<Roteiro> {
+
+	public PaginaRoteiroDTO(int indicePagina) {
+		super(indicePagina);
+	}
+	
+	public PaginaRoteiroDTO(PaginaDTO paginaBuscada) {
+		super(paginaBuscada.getIndicePagina());
+		setTamanhoDaPagina(paginaBuscada.getTamanhoDaPagina());
+	}
+
+	private FiltroRoteiroVO filtroRoteiro;
+
+	public FiltroRoteiroVO getFiltroRoteiro() {
+		return filtroRoteiro;
+	}
+
+	public void setFiltroRoteiro(FiltroRoteiroVO filtroRoteiro) {
+		this.filtroRoteiro = filtroRoteiro;
+	}
+
+}

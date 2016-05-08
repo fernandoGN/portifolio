@@ -1,0 +1,11 @@
+package br.com.devnagui.project.manager;
+
+import java.util.List;
+
+import br.com.devnagui.project.entities.CombustivelVisita;
+
+public interface CombustivelVisitaManager extends GenericoManager<CombustivelVisita> {
+	
+	public List<CombustivelVisita> buscarCombustivelVisitaPorIdVisita(Long id);
+
+}

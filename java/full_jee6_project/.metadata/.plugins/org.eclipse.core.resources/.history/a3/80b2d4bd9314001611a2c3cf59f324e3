@@ -1,0 +1,32 @@
+/**
+C * Criado por 006157C6 em 09/04/2013
+ */
+package br.com.devnagui.project;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+import br.gov.ce.project.manager.fiscal.FiscalSuiteDeTestes;
+import br.gov.ce.project.manager.posto.ManterPostoCombustivelSuiteDeTestes;
+import br.gov.ce.project.manager.rota.RotaSuiteDeTestes;
+import br.gov.ce.project.manager.roteiro.RoteiroSuiteDeTestes;
+import br.gov.ce.project.manager.visita.VisitaSuiteDeTestes;
+
+/**
+ * Criado por @author 006157C6 em 09/04/2013
+ * 
+ */
+@RunWith(Suite.class)
+@SuiteClasses({ RotaSuiteDeTestes.class, FiscalSuiteDeTestes.class, ManterPostoCombustivelSuiteDeTestes.class, RoteiroSuiteDeTestes.class,
+        VisitaSuiteDeTestes.class })
+public class ConvarCoreSuiteDeTestes {
+
+    // ATRIBUTOS E CONSTRUTORES
+
+    // METODOS PUBLICOS
+
+    // METODOS PRIVADOS
+
+    // GETS E SETS
+}

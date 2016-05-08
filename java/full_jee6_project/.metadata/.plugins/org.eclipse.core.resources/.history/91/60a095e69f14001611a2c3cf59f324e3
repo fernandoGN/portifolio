@@ -1,0 +1,32 @@
+/**
+ * Criado por 006157C6 em 09/04/2013
+ */
+package br.com.devnagui.project.manager.posto;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+import br.com.devnagui.project.manager.posto.importaranp.ImportacaoDadosAnpBeanTest;
+import br.com.devnagui.project.manager.posto.manter.BicoManagerBeanTest;
+import br.com.devnagui.project.manager.posto.manter.BombaManagerBeanTest;
+import br.com.devnagui.project.manager.posto.manter.PostoCombustivelManagerBeanTest;
+import br.com.devnagui.project.manager.posto.manter.TanqueManagerBeanTest;
+
+/**
+ * Criado por @author 006157C6 em 09/04/2013
+ * 
+ */
+@RunWith(Suite.class)
+@SuiteClasses({ TanqueManagerBeanTest.class, PostoCombustivelManagerBeanTest.class, BombaManagerBeanTest.class, BicoManagerBeanTest.class,
+		ImportacaoDadosAnpBeanTest.class })
+public class ManterPostoCombustivelSuiteDeTestes {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	// METODOS PUBLICOS
+
+	// METODOS PRIVADOS
+
+	// GETS E SETS
+}

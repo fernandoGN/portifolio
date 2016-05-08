@@ -1,0 +1,39 @@
+package br.com.devnagui.project.manager;
+
+import java.util.List;
+
+import br.com.devnagui.project.entities.NFEEntrada;
+import br.com.devnagui.project.entities.Visita;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.webservices.consultanfe.adapter.ItemNFEAdapter;
+import br.com.devnagui.project.webservices.consultanfe.adapter.NFEAdapter;
+
+public interface NotaFiscalEletronicaManager extends GenericoManager<NFEEntrada>{
+
+   
+    /**
+     * Realiza todas as validacoes e verificacoes na consulta da NFe no NFeCorp.
+     *  -Valida a chave de acesso;
+     *  -Valida o retorno do NFeCorp;
+     *  -Classifica a NFe conforme o retorno;
+     *  -Marca os itens da NFe que já foram utilizados no PROJECT.
+     * @param visitaAtual
+     * @param chaveAcesso
+     * @return
+     * @throws BusinessException
+     */
+    public NFEAdapter consultarNFECorpPelaChaveAcesso(final Visita visitaAtual, final String chaveAcesso) throws BusinessException;
+
+    void validarNotaFiscalDoNFECorp(Visita visitaAtual, NFEAdapter nfeRetornada);
+    
+    public NFEEntrada obterNotaFiscalPorChaveDeAcesso(String chaveAcesso);
+
+    public void limparItensDaVisita(Long idVisita);
+
+    /** 
+     * Este metodo complementa o salvamento da visita na aba de NFEs, com o salvamento dos itens e respectivas notas.
+     */
+    void salvarItensComNotaFiscal(Visita visitaAtual) throws BusinessException;
+
+    void verificarItemNFeManualJaCadastrado(List<NFEAdapter> nfeServicos, ItemNFEAdapter itemNFE4RegistroManual) throws BusinessException;
+}

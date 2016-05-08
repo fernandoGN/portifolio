@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="PROJECT">
+	
+	<rota seq_rota="-3" num_rota="3" nom_rota="Teste Alterar 3"
+		sta_rota="1" TXT_OBSERVACAO_ROTA="" />
+
+	<rota_versao seq_rota_versao="-3" seq_rota="-3"
+		sta_versao_rota="2" txt_observacao_versao="Rota Teste Alterar Rota Versão Ativa 3" 
+		num_duracao_ciclo="7" dat_desativacao="2013-01-01" />
+		
+	<rota_versao seq_rota_versao="-4" seq_rota="-3"
+		sta_versao_rota="3" txt_observacao_versao="Rota Teste Alterar Rota Versão Ativa 4" 
+		num_duracao_ciclo="7" dat_desativacao="2013-01-01" />
+
+	<rota_versao_posto seq_rota_visita_versao="-3"
+		seq_posto_combustivel="-1" />
+		
+	<rota_versao_posto seq_rota_visita_versao="-3"
+		seq_posto_combustivel="-2" />
+		
+	<rota_versao_posto seq_rota_visita_versao="-4"
+		seq_posto_combustivel="-3" />
+		
+	<rota_versao_posto seq_rota_visita_versao="-4"
+		seq_posto_combustivel="-4" />
+</dataset>

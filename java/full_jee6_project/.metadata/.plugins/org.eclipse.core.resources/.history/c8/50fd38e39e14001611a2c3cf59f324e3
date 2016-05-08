@@ -1,0 +1,15 @@
+package br.com.devnagui.project.enums;
+
+/**
+ * "Registra a origem das informações do item da NFe, se foi importado da NFECORP, ou se informado manualmente pelo fiscal:
+0-Informado Manualmente
+1-Importado da NFECORP"
+ * @author 006157C6
+ *
+ */
+public enum SituacaoRegistroItem {
+
+    INFORMADO_MANUALMENTE,
+    IMPORTADO_DA_NFECORP
+    
+}

@@ -1,0 +1,270 @@
+/**
+ * 
+ */
+package br.com.devnagui.project.manager.roteiro.manter;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import junit.framework.Assert;
+
+import org.apache.log4j.Logger;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.dbunit.annotation.DataSet;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy;
+import br.com.devnagui.project.dto.PageObjectDTO;
+import br.com.devnagui.project.dto.PaginaRoteiroDTO;
+import br.com.devnagui.project.entities.Roteiro;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.manager.impl.FiscalManagerBean;
+import br.com.devnagui.project.manager.impl.RotaVersaoManagerBean;
+import br.com.devnagui.project.manager.impl.RoteiroManagerBean;
+import br.com.devnagui.project.manager.impl.UsuarioManagerBean;
+import br.com.devnagui.project.vo.FiltroRoteiroVO;
+
+/**
+ * @author 006157C6
+ * 
+ */
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class RoteiroManagerBeanTest {
+	private static final long SEQ_ROTEIRO_XML = -1L;
+
+    private static final Logger LOG = Logger.getLogger(RoteiroManagerBeanTest.class);
+	
+	private static final String ATRIBUIR_ROTEIRO = "atribuirRoteiro.xml";
+
+	@TestedObject
+	private RoteiroManagerBean roteiroManagerBean;
+
+	@TestedObject
+	private FiscalManagerBean fiscalManager;
+	
+	@TestedObject
+	private RotaVersaoManagerBean rotaVersaoManager;
+	
+	@InjectIntoByType(target = "fiscalManager")
+	@TestedObject
+	private UsuarioManagerBean usuarioManager;
+	
+	@InjectIntoByType
+	@PersistenceContext(unitName = "test-persistence-unit")
+	private EntityManager entityManager;
+	
+	@Before
+    public void limparDadosVisitaParaExclusao() {
+        entityManager.createNativeQuery("delete from COMBUSTIVEL_VISITA").executeUpdate();
+        entityManager.createNativeQuery("delete from ITEM_NFE_ENTRADA").executeUpdate();
+        entityManager.createNativeQuery("delete from VISITA_NFE").executeUpdate();
+        entityManager.createNativeQuery("delete from NFE_ENTRADA").executeUpdate();
+        entityManager.createNativeQuery("delete from LEITURA_ENCERRANTE").executeUpdate();
+        entityManager.createNativeQuery("delete from MEDICAO_TANQUE").executeUpdate();
+        entityManager.createNativeQuery("delete from VISITA").executeUpdate();
+    }
+
+	@Test(expected=BusinessException.class)
+	@DataSet(value = { "inserirUsuarios.xml","inserirFiscalHabilitado.xml","../../rota/manter/buscarPostoCombustivel.xml","../../rota/manter/alterarRotaComRotaVersaoAtiva1.xml",ATRIBUIR_ROTEIRO}, loadStrategy=br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testInserirRoteiroComRotaVersaoNoMesmoPeriodo() throws Exception {
+		Roteiro roteiroDataSet = roteiroManagerBean.buscar(-1L);
+		atualizarDatasRoteiro(roteiroDataSet);
+		Roteiro roteiro = new Roteiro();
+		Roteiro roteiroJaInserido = roteiroManagerBean.buscarTodos().iterator().next();
+		roteiro.setDataInicial(new Date());
+		roteiro.setDataFim(roteiroJaInserido.getDataFim());
+		roteiro.setFiscal(roteiroJaInserido.getFiscal());
+		roteiro.setRotaVersao(roteiroJaInserido.getRotaVersao());
+		try {
+			roteiroManagerBean.inserir(roteiro);
+		} catch (BusinessException e) {
+			Assert.assertEquals("mensagem.roteiro.rota.versao.periodo.invalido", e.getMessage());
+			throw e;
+		}
+	}
+	
+	@Test
+	@DataSet(value = {ATRIBUIR_ROTEIRO}, loadStrategy=InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testExcluirRoteiro() throws Exception {
+		Roteiro roteiroDataSet = roteiroManagerBean.buscar(-1L);
+		atualizarDatasRoteiro(roteiroDataSet);
+		Roteiro roteiro = roteiroManagerBean.buscar(SEQ_ROTEIRO_XML);
+		roteiroManagerBean.excluir(roteiro);
+		Assert.assertNull(roteiroManagerBean.buscar(SEQ_ROTEIRO_XML));
+	}
+	
+    @Test
+    @DataSet(value = { "inserirUsuarios.xml","inserirFiscalHabilitado.xml","../../rota/manter/buscarPostoCombustivel.xml","../../rota/manter/alterarRotaComRotaVersaoAtiva1.xml",ATRIBUIR_ROTEIRO}, loadStrategy=InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testAlterarRoteiro() throws Exception {
+    	Roteiro roteiroDataSet = roteiroManagerBean.buscar(-1L);
+		atualizarDatasRoteiro(roteiroDataSet);
+    	Roteiro roteiro = roteiroManagerBean.buscar(SEQ_ROTEIRO_XML);
+		String observacaoAlterada = "Teste Observa��o alterada.";
+        roteiro.getRotaVersao().setObservacao(observacaoAlterada);
+		roteiro=roteiroManagerBean.update(roteiro);
+		roteiroManagerBean.removerDoContexto(roteiro);
+		Roteiro roteiroAlterado = roteiroManagerBean.buscar(SEQ_ROTEIRO_XML);
+		Assert.assertEquals(observacaoAlterada, roteiroAlterado.getRotaVersao().getObservacao());
+	}
+	
+	@Test
+	public void testCriarSugestaoParaDataFinal() {
+		Date data = roteiroManagerBean.criarSugestaoParaDataFinal(new Date(), 1);
+		Assert.assertTrue(data.after(new Date()));
+		
+	}
+	
+    @Test
+    public void testDataInicialMaiorQueDataFinal() {
+        Roteiro roteiro = new Roteiro();
+        roteiro.setDataInicial(new Date());
+        Date dataFim = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dataFim);
+        calendar.add(Calendar.DAY_OF_MONTH, -10);
+        roteiro.setDataFim(dataFim);
+        try {
+            roteiroManagerBean.validaDatas(roteiro);
+        } catch (BusinessException e) {
+            Assert.assertEquals("mensagem.roteiro.data.inicio.invalida2", e.getMessage().toString());
+        }
+    }
+
+	@Test
+	public void testDataInicialMenorQueDataAtual() {
+			Roteiro roteiro = new Roteiro();
+			Date dataInicial = new Date();
+			Calendar calendar = Calendar.getInstance();
+	        calendar.setTime(dataInicial);
+	        calendar.add(Calendar.DAY_OF_MONTH, -1);
+			roteiro.setDataInicial(dataInicial);
+			roteiro.setDataFim(new Date());
+		try {
+			roteiroManagerBean.validaDatas(roteiro);
+		} catch (BusinessException e) {
+			Assert.assertEquals("mensagem.roteiro.data.inicio.invalida1", e.getMessage());
+		}
+	}
+
+	@Test
+	public void testDataValida() throws BusinessException {
+		Roteiro roteiro = new Roteiro();
+		roteiro.setDataInicial(new Date());
+		Date dataFim = new Date();
+		Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dataFim);
+        calendar.add(Calendar.DAY_OF_MONTH, 10);
+		roteiro.setDataFim(calendar.getTime());
+		roteiroManagerBean.validaDatas(roteiro);
+		Assert.assertTrue(roteiro.getDataInicial().before(roteiro.getDataFim()));
+	}
+	
+	@Test
+	public void testDatasNulas() {
+		Roteiro roteiro = new Roteiro();
+		try {
+			roteiroManagerBean.validaDatas(roteiro);
+		} catch (BusinessException e) {
+			Assert.assertEquals("mensagem.roteiro.data.invalida", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testDataFimNula() throws BusinessException {
+		Roteiro roteiro = new Roteiro();
+		roteiro.setDataInicial(new Date());
+		roteiroManagerBean.validaDatas(roteiro);
+	}
+	
+	@Test
+	public void testDataInicialNula() throws BusinessException {
+		Roteiro roteiro = new Roteiro();
+		roteiro.setDataFim(new Date());
+		roteiroManagerBean.validaDatas(roteiro);
+	}
+	
+	@Test
+    @DataSet(value = { "inserirUsuarios.xml","inserirFiscalHabilitado.xml","../../rota/manter/buscarPostoCombustivel.xml","../../rota/manter/alterarRotaComRotaVersaoAtiva1.xml",ATRIBUIR_ROTEIRO}, loadStrategy=InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testObterListaPaginada() throws Exception {
+		Roteiro roteiroDataSet = roteiroManagerBean.buscar(-1L);
+		atualizarDatasRoteiro(roteiroDataSet);
+		PaginaRoteiroDTO paginacao = new PaginaRoteiroDTO(1);
+        paginacao.setFiltroRoteiro(new FiltroRoteiroVO());
+		PageObjectDTO<Roteiro> roteiros = roteiroManagerBean.obterListaPaginadaSimples(paginacao);
+		Assert.assertTrue(roteiros.getDados().size() > 0);
+		roteiroManagerBean.getEntityManager().clear();
+	}
+	
+	@Test
+    @DataSet(value={"inserirUsuarios.xml","inserirFiscalHabilitado.xml","../../rota/manter/buscarPostoCombustivel.xml","../../rota/manter/alterarRotaComRotaVersaoAtiva1.xml",ATRIBUIR_ROTEIRO},loadStrategy=InsertOrUpdateWithCommitLoadStrategy.class)
+    public void testInserir() throws Exception {
+		Roteiro roteiroDataSet = roteiroManagerBean.buscar(-1L);
+		atualizarDatasRoteiro(roteiroDataSet);
+		Roteiro roteiro = new Roteiro();
+        roteiro.setDataInicial(new Date());
+        Date dataFim = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dataFim);
+        calendar.add(Calendar.DAY_OF_MONTH, 10);
+        roteiro.setDataFim(dataFim);
+        roteiro.setFiscal(fiscalManager.buscar(1L));
+        roteiro.setRotaVersao(rotaVersaoManager.buscar(SEQ_ROTEIRO_XML));
+        roteiroManagerBean.inserir(roteiro);
+        Assert.assertNotNull(roteiro.getId());
+        roteiroManagerBean.excluir(roteiro);
+    }
+	
+	@Test
+	public void testBuscarRoteiroPorDataDeAufericao() {
+		List<Roteiro> roteiros = roteiroManagerBean.buscarRoteiroPorDataAufericao(new Date());
+		Assert.assertTrue(roteiros.size() > 0);
+			
+	}
+	
+	@Test
+	public void testBuscarRoteiroPorDataAufericaoIdFiscal() {
+		roteiroManagerBean.buscarRoteirosPorIdFiscalDataAufericao(1L, new Date());
+	}
+	
+	@Test
+	public void testVerificarRoteiroComVisita() throws BusinessException {
+		Roteiro roteiro = roteiroManagerBean.buscarTodos().iterator().next();
+		roteiroManagerBean.verificarVisitaExistenteParaRoteiroSelecionado(roteiro.getId());
+	}
+	
+	@Test
+    @DataSet(value = { "inserirUsuarios.xml","inserirFiscalHabilitado.xml","../../rota/manter/buscarPostoCombustivel.xml","../../rota/manter/alterarRotaComRotaVersaoAtiva1.xml",ATRIBUIR_ROTEIRO}, loadStrategy=InsertOrUpdateWithCommitLoadStrategy.class )
+	public void testObterListaPaginadaTotal() throws Exception {
+		Roteiro roteiroDataSet = roteiroManagerBean.buscar(-1L);
+		atualizarDatasRoteiro(roteiroDataSet);
+		PaginaRoteiroDTO paginacao = new PaginaRoteiroDTO(1);
+		FiltroRoteiroVO filtroRoteiroVO = new FiltroRoteiroVO();
+		filtroRoteiroVO.setDataFinal(new Date());
+		filtroRoteiroVO.setDataInicial(new Date());
+        paginacao.setFiltroRoteiro(filtroRoteiroVO);
+		PageObjectDTO<Roteiro> roteiros = roteiroManagerBean.obterListaRoteiroPorDataAuferiacao(paginacao);
+		Assert.assertTrue(roteiros.getDados().size() > 0);
+		roteiroManagerBean.getEntityManager().clear();
+	}
+	
+	private void atualizarDatasRoteiro(Roteiro roteiro) throws BusinessException {
+		roteiro.setDataInicial(new Date());
+		 LOG.info("Sugest�o Data Final.");
+	     Calendar calendar = Calendar.getInstance();
+	     calendar.setTime(new Date());
+	     calendar.add(Calendar.DATE, 30);
+	     roteiro.setDataFim(calendar.getTime());   
+	     roteiroManagerBean.update(roteiro);
+	}
+
+}

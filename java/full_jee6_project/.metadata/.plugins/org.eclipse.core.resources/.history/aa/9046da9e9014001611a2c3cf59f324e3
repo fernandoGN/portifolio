@@ -1,0 +1,108 @@
+/**
+ * Criado por 006157C6 em 26/03/2013
+ */
+package br.gov.ce.sefaz.project.manager.impl;
+
+import java.util.List;
+import java.util.Set;
+
+import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
+
+import org.apache.log4j.Logger;
+
+import br.gov.ce.sefaz.project.entities.Tanque;
+import br.gov.ce.sefaz.project.manager.TanqueManager;
+import br.gov.ce.sefaz.project.manager.exception.BusinessException;
+
+/**
+ * Criado por @author 006157C6 em 26/03/2013
+ * 
+ */
+@Stateless
+public class TanqueManagerBean extends GenericoManagerBean<Tanque> implements TanqueManager {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7675532920041712355L;
+
+	private static final Logger LOG = Logger.getLogger(TanqueManagerBean.class);
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	// METODOS PUBLICOS
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * br.gov.ce.sefaz.project.manager.impl.GenericoManagerBean#inserir(java.
+	 * io.Serializable)
+	 */
+	@Override
+	public void inserir(Tanque entidade) throws BusinessException {
+		validar(entidade);
+		super.inserir(entidade);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * br.gov.ce.sefaz.project.manager.impl.GenericoManagerBean#alterar(java.
+	 * io.Serializable)
+	 */
+	@Override
+	public Tanque alterar(Tanque entidade) throws BusinessException {
+		validar(entidade);
+		return super.alterar(entidade);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see br.gov.ce.sefaz.project.manager.TanqueManager#obterTanquesDoPosto()
+	 */
+	@Override
+	public List<Tanque> obterTanquesDoPosto(Long idPosto) {
+		TypedQuery<Tanque> query = getEntityManager().createNamedQuery(Tanque.QUERY_OBTER_TANQUES_DO_POSTO, Tanque.class);
+		query.setParameter("idPosto", idPosto);
+		return query.getResultList();
+	}
+
+	// METODOS PRIVADOS
+	/**
+	 * Serve para...
+	 * 
+	 * @param entidade
+	 * @throws BusinessException
+	 */
+	private void validar(Tanque entidade) throws BusinessException {
+		LOG.info("Validando tanque");
+
+		if (entidade.getNumTanquePosto() == null || 0 == entidade.getNumTanquePosto()) {
+			throw new BusinessException("msg.aba.tanque.tanqueEscolhido.numero.obrigatorio");
+		}
+		TypedQuery<Long> query = getEntityManager().createNamedQuery(Tanque.QUERY_VERIFICA_NUM_TANQUE_UNIQUE, Long.class);
+		query.setParameter("numTanquePosto", entidade.getNumTanquePosto());
+		// Zero faz parte da logica da consulta para que seja verificado a
+		// unicidade do numero do posto
+		query.setParameter("idTanque", entidade.getId() != null ? entidade.getId() : 0);
+		query.setParameter("idPosto", entidade.getPostoCombustivel().getId());
+		Long count = query.getSingleResult();
+		if (count > 0) {
+			throw new BusinessException("msg.aba.tanque.tanqueEscolhido.numero.unico");
+		}
+
+		LOG.info("Finalizando Validando tanque");
+	}
+
+	@Override
+	public List<Tanque> obterTanquesPorDoPostoComTipoCombustiveis(Long idPosto, Set<Long> tiposCombustiveis) {
+		TypedQuery<Tanque> query = getEntityManager().createNamedQuery(Tanque.QUERY_OBTER_TANQUES_DO_POSTO_POR_PRODUTO_COMBUSTIVEL, Tanque.class);
+		query.setParameter("idPostoCombustivel", idPosto);
+		query.setParameter("codsGurpoCombustivel", tiposCombustiveis);
+		return query.getResultList();
+	}
+}

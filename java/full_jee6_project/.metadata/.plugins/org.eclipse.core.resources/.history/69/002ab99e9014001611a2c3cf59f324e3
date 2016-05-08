@@ -1,0 +1,225 @@
+/**
+ * Criado por 006157C6 em 20/03/2013
+ */
+package br.gov.ce.sefaz.project.entities;
+
+import java.io.Serializable;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+/**
+ * Criado por @author 006157C6 em 20/03/2013
+ * 
+ */
+@Entity
+@Table(name = "TANQUE",  schema = "PROJECT",uniqueConstraints={@UniqueConstraint(columnNames={"NUM_TANQUE_POSTO","SEQ_POSTO_COMBUSTIVEL"})})
+@NamedQueries(value = {
+		@NamedQuery(name = Tanque.QUERY_VERIFICA_NUM_TANQUE_UNIQUE, query = "select count(t) from Tanque t where t.numTanquePosto = :numTanquePosto and t.id <> :idTanque and t.postoCombustivel.id = :idPosto"),
+		@NamedQuery(name = Tanque.QUERY_OBTER_TANQUES_DO_POSTO, query = "select t from Tanque t where t.postoCombustivel.id = :idPosto order by t.numTanquePosto asc"),
+		@NamedQuery(name = Tanque.QUERY_OBTER_TANQUES_DO_POSTO_POR_PRODUTO_COMBUSTIVEL, query = "select t from Tanque t where t.postoCombustivel.id =:idPostoCombustivel and t.produtoCombustivel.id in (:codsGurpoCombustivel)" )})
+public class Tanque implements Serializable, Comparable<Tanque> {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 508785172662694257L;
+
+	public static final String QUERY_VERIFICA_NUM_TANQUE_UNIQUE = "verificaTanqueUnique";
+	public static final String QUERY_OBTER_TANQUES_DO_POSTO = "obterTanquesDoPosto";
+	public static final String QUERY_OBTER_TANQUES_DO_POSTO_POR_PRODUTO_COMBUSTIVEL = "obterTanquesDoPostoPorProdutoCombustivel";
+
+	@Id
+	@Column(name = "SEQ_TANQUE", nullable = false)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_TANQUE")
+	@SequenceGenerator(name = "SQ_TANQUE", sequenceName = "SQ_TANQUE", allocationSize = 1, initialValue = 1, schema = "PROJECT")
+	private Long id;
+
+	@ManyToOne(cascade = { CascadeType.DETACH, CascadeType.REFRESH }, optional = false)
+	@JoinColumn(name = "SEQ_POSTO_COMBUSTIVEL", updatable = true, insertable = true, nullable = false)
+	@NotNull(message = "msg.aba.tanque.tanqueEscolhido.posto.obrigatorio")
+	private PostoCombustivel postoCombustivel;
+
+	@Column(name = "NUM_TANQUE_POSTO", precision = 3, scale = 0, updatable = true, insertable = true)
+	@NotNull(message = "msg.aba.tanque.tanqueEscolhido.numero.obrigatorio")
+	private Long numTanquePosto;
+
+	@Column(name = "QTD_CAPACIDADE", updatable = true, insertable = true)
+	@NotNull(message = "msg.aba.tanque.tanqueEscolhido.capacidade.obrigatorio")
+	private Long capacidade;
+
+	@Column(name = "TXT_OBSERVACAO_TANQUE", length = 200, updatable = true, insertable = true)
+	@Size(max=200,message="msg.aba.geral.observacao.maximo")
+	private String observacao;
+
+	@ManyToOne(cascade = { CascadeType.REFRESH }, optional = false)
+	@JoinColumn(name = "SEQ_PRODUTO_COMBUSTIVEL", nullable = false, updatable = true, insertable = true)
+	@NotNull(message = "msg.aba.tanque.tanqueEscolhido.combustivel.obrigatorio")
+	private ProdutoCombustivel produtoCombustivel;
+	
+	// METODOS PUBLICOS
+
+	// METODOS PRIVADOS
+
+	// GETS E SETS
+	/**
+	 * @return the id
+	 */
+	public Long getId() {
+		return id;
+	}
+
+	/**
+	 * @param id
+	 *            the id to set
+	 */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return the postoCombustivel
+	 */
+	public PostoCombustivel getPostoCombustivel() {
+		return postoCombustivel;
+	}
+
+	/**
+	 * @param postoCombustivel
+	 *            the postoCombustivel to set
+	 */
+	public void setPostoCombustivel(PostoCombustivel postoCombustivel) {
+		this.postoCombustivel = postoCombustivel;
+	}
+
+	/**
+	 * @return the numTanquePosto
+	 */
+	public Long getNumTanquePosto() {
+		return numTanquePosto;
+	}
+
+	/**
+	 * @param numTanquePosto
+	 *            the numTanquePosto to set
+	 */
+	public void setNumTanquePosto(Long numTanquePosto) {
+		this.numTanquePosto = numTanquePosto;
+	}
+
+	/**
+	 * @return the capacidade
+	 */
+	public Long getCapacidade() {
+		return capacidade;
+	}
+
+	/**
+	 * @param capacidade
+	 *            the capacidade to set
+	 */
+	public void setCapacidade(Long capacidade) {
+		this.capacidade = capacidade;
+	}
+
+	/**
+	 * @return the observacao
+	 */
+	public String getObservacao() {
+		return observacao;
+	}
+
+	/**
+	 * @param observacao
+	 *            the observacao to set
+	 */
+	public void setObservacao(String observacao) {
+		this.observacao = observacao;
+	}
+
+	/**
+	 * @return the produtoCombustivel
+	 */
+	public ProdutoCombustivel getProdutoCombustivel() {
+		return produtoCombustivel;
+	}
+
+	/**
+	 * @param produtoCombustivel
+	 *            the produtoCombustivel to set
+	 */
+	public void setProdutoCombustivel(ProdutoCombustivel produtoCombustivel) {
+		this.produtoCombustivel = produtoCombustivel;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(Tanque o) {
+		if (this.numTanquePosto != null)
+			return this.numTanquePosto.compareTo(o.numTanquePosto);
+		else
+			// Se esse posto n conter numero do posto entao ele deverá ser maior
+			return 1;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((numTanquePosto == null) ? 0 : numTanquePosto.hashCode());
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof Tanque))
+			return false;
+		Tanque other = (Tanque) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (numTanquePosto == null) {
+			if (other.numTanquePosto != null)
+				return false;
+		} else if (!numTanquePosto.equals(other.numTanquePosto))
+			return false;
+		return true;
+	}
+
+}

@@ -1,0 +1,45 @@
+/**
+ * Criado por 006157C6 em 28/03/2013
+ */
+package br.com.devnagui.project.manager.exception;
+
+/**
+ * Classe raiz de todas as excecoes do PROJECT. Criado por @author 006157C6 em
+ * 28/03/2013
+ * 
+ */
+public class ConvarException extends Exception {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5397621866687810136L;
+
+	/**
+	 * 
+	 */
+	public ConvarException(Exception e) {
+		super(e);
+	}
+
+	/**
+	 * 
+	 */
+	public ConvarException(String mensagem) {
+		super(mensagem);
+	}
+
+	/**
+	 * 
+	 */
+	public ConvarException(Exception e, String mensagem) {
+		super(mensagem, e);
+	}
+	// ATRIBUTOS E CONSTRUTORES
+
+	// METODOS PUBLICOS
+
+	// METODOS PRIVADOS
+
+	// GETS E SETS
+}

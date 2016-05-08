@@ -1,0 +1,61 @@
+/**
+ * Criado por 006157C6 em 26/04/2013
+ */
+package br.com.devnagui.project.dbunitils;
+
+import java.sql.SQLException;
+
+import org.apache.log4j.Logger;
+import org.dbunit.DatabaseUnitException;
+import org.dbunit.dataset.IDataSet;
+import org.unitils.dbunit.datasetloadstrategy.impl.RefreshLoadStrategy;
+import org.unitils.dbunit.util.DbUnitDatabaseConnection;
+
+/**
+ * Criada para realizar o commit do dataset na base, pois a class
+ * RefreshLoadStrategy não executa o commit, lokando as tuplas até o final do
+ * teste.
+ * 
+ */
+public class InsertOrUpdateWithCommitLoadStrategy extends RefreshLoadStrategy {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	private static final Logger LOG = Logger.getLogger(InsertOrUpdateWithCommitLoadStrategy.class);
+
+	// METODOS PUBLICOS
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy
+	 * #doExecute (org.unitils.dbunit.util.DbUnitDatabaseConnection,
+	 * org.dbunit.dataset.IDataSet)
+	 */
+	@Override
+	public void doExecute(DbUnitDatabaseConnection dbUnitDatabaseConnection, IDataSet dataSet) throws DatabaseUnitException, SQLException {
+		LOG.info("Inserindo ou atualizando dataset.");
+
+		try {
+            for (String nomeTabela : dataSet.getTableNames()){
+                LOG.info("Tabela a ser manipulada pelo dbunit: " + nomeTabela);
+            }
+            super.doExecute(dbUnitDatabaseConnection, dataSet);
+			LOG.info("Operacao realizada. Commitando mudancas.");
+			dbUnitDatabaseConnection.getConnection().commit();
+			dbUnitDatabaseConnection.close();
+		} catch (Exception e) {
+			LOG.error(e.getMessage(),e);
+			dbUnitDatabaseConnection.getConnection().rollback();
+			throw new DatabaseUnitException(e);
+		}
+		
+		LOG.info("Dataset inserido ou atualizado.");
+
+	}
+
+	// METODOS PRIVADOS
+
+	// GETS E SETS
+}

@@ -1,0 +1,14 @@
+package br.com.devnagui.project.enums;
+
+public enum SituacaoNFE {
+
+    NAO_AUTORIZADA,CFOP_INVALIDO,DESTINATARIO_NAO_CONFERE,PRAZO_EXPIRADO,OK,REGISTRO_MANUAL;
+    
+    private Integer codigo;
+    
+    
+    
+    public Integer getCodigo() {
+        return codigo;
+    }
+}

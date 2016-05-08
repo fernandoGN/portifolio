@@ -1,0 +1,22 @@
+package br.com.devnagui.project.user;
+
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+
+import org.junit.Test;
+import org.mockito.stubbing.OngoingStubbing;
+
+import br.com.devnagui.project.ejb.impl.UserBusinessEJB;
+import br.com.devnagui.project.entities.User;
+import static org.mockito.Mockito.*;
+public class UserBusinessEJBTest {
+
+	@Test
+	public void test() {
+		UserBusinessEJB userBusinessEJB = mock(UserBusinessEJB.class);
+		OngoingStubbing<EntityManager> thenReturn = when(userBusinessEJB.getEntityManager()).thenReturn(mock(EntityManager.class));
+		when(userBusinessEJB.getEntityManager().createNamedQuery(User.QUERY_SEARCH_BY_REGISTRATION_OR_NAME, User.class)).thenReturn(mock(TypedQuery.class));
+		
+	}
+
+}

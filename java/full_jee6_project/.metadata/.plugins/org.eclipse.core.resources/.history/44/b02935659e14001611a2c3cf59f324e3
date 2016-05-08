@@ -1,0 +1,161 @@
+/**
+ * Criado por 006157C6 em 20/03/2013
+ */
+package br.com.devnagui.project.entities;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+/**
+ * Criado por @author 006157C6 em 20/03/2013
+ * 
+ */
+@Entity
+@Table(name = "PRODUTO_COMBUSTIVEL",schema="PROJECT")
+@NamedQueries(value = {
+	@NamedQuery(name = ProdutoCombustivel.QUERY_OBTER_COMBUSTIVEL_POR_GRUPO_COMBUSTIVEL, query = "select pc from ProdutoCombustivel pc where pc.codGrupoCombustivel in (:codsGruposCombustiveis)" )
+})
+public class ProdutoCombustivel implements Serializable,Comparable<ProdutoCombustivel> {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 235344061845663372L;
+	
+	public static final String QUERY_OBTER_COMBUSTIVEL_POR_GRUPO_COMBUSTIVEL = "obterCombustivelPorGrupoCombustivel";
+
+	@Id
+	@Column(name = "SEQ_PRODUTO_COMBUSTIVEL")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_PRODUTO_COMBUSTIVEL")
+	@SequenceGenerator(name = "SEQ_PRODUTO_COMBUSTIVEL", sequenceName = "SQ_PRODUTO_COMBUSTIVEL", allocationSize = 1, initialValue = 1)
+	private Long id;
+
+	@Column(name = "NOM_COMBUSTIVEL", length = 40)
+	private String nomeCombustivel;
+	
+	@Column(name = "COD_GRUPO_COMBUSTIVEL", precision=2,scale=0)
+    private Integer codGrupoCombustivel;
+	
+	@Column(name="QTD_VOL_OMISSAO_ACEITAVEL")
+	private Long volumeOmissaoAceitavel;
+	
+	@Column(name="NUM_PO_ACEITAVEL")
+	private Double pcOmissaoAceitavel;
+
+	// METODOS PUBLICOS
+
+	// METODOS PRIVADOS
+
+	// GETS E SETS
+	/**
+	 * @return the id
+	 */
+	public Long getId() {
+		return id;
+	}
+
+	/**
+	 * @param id
+	 *            the id to set
+	 */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return the nomeCombustivel
+	 */
+	public String getNomeCombustivel() {
+		return nomeCombustivel;
+	}
+
+	/**
+	 * @param nomeCombustivel
+	 *            the nomeCombustivel to set
+	 */
+	public void setNomeCombustivel(String nomeCombustivel) {
+		this.nomeCombustivel = nomeCombustivel;
+	}
+	
+	public Integer getCodGrupoCombustivel() {
+        return codGrupoCombustivel;
+    }
+
+    public void setCodGrupoCombustivel(Integer codGrupoCombustivel) {
+        this.codGrupoCombustivel = codGrupoCombustivel;
+    }
+
+    /*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((nomeCombustivel == null) ? 0 : nomeCombustivel.hashCode());
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof ProdutoCombustivel))
+			return false;
+		ProdutoCombustivel other = (ProdutoCombustivel) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (nomeCombustivel == null) {
+			if (other.nomeCombustivel != null)
+				return false;
+		} else if (!nomeCombustivel.equals(other.nomeCombustivel))
+			return false;
+		return true;
+	}
+
+    @Override
+    public int compareTo(ProdutoCombustivel o) {
+        return this.nomeCombustivel.compareToIgnoreCase(o.nomeCombustivel);
+    }
+
+    public Long getVolumeOmissaoAceitavel() {
+        return volumeOmissaoAceitavel;
+    }
+
+    public void setVolumeOmissaoAceitavel(Long volumeOmissaoAceitavel) {
+        this.volumeOmissaoAceitavel = volumeOmissaoAceitavel;
+    }
+
+    public Double getPcOmissaoAceitavel() {
+        return pcOmissaoAceitavel;
+    }
+
+    public void setPcOmissaoAceitavel(Double pcOmissaoAceitavel) {
+        this.pcOmissaoAceitavel = pcOmissaoAceitavel;
+    }
+
+}

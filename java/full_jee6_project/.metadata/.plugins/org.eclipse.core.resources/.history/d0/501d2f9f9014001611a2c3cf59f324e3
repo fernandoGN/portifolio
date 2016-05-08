@@ -1,0 +1,131 @@
+/**
+ * Criado por 006157C6 em 24/04/2013
+ */
+package br.gov.ce.sefaz.project.objetodepagina.posto.manter;
+
+import org.apache.log4j.Logger;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.Select;
+
+import br.gov.ce.sefaz.project.entities.Tanque;
+
+/**
+ * Criado por @author 006157C6 em 24/04/2013
+ * 
+ */
+public class TanqueObjetoDePagina extends ManterPostoCombustivelObjetoDePagina {
+
+	// ATRIBUTOS E CONSTRUTORES
+
+	/**
+	 * 
+	 */
+	private static final String MENSAGEM_SALVO_SUCESSO_REGEX = "^[\\s\\S]*Tanque salvo com sucesso![\\s\\S]*$";
+
+	/**
+	 * 
+	 */
+	private static final String TITULO_PAINEL_TANQUE_REGEX = "^[\\s\\S]*Tanque criado / selecionado[\\s\\S]*$";
+
+	private static final Logger LOG = Logger.getLogger(TanqueObjetoDePagina.class);
+
+	@FindBy(id = "btNovoTanque")
+	private WebElement btNovoTanque;
+	@FindBy(id = "selectTanques")
+	private WebElement selectTanques;
+	@FindBy(id = "btAlterarTanque")
+	private WebElement btAlterarTanque;
+	@FindBy(id = "numTanque")
+	private WebElement numTanque;
+	@FindBy(id = "produtoCombustivelSelect")
+	private WebElement produtoCombustivelSelect;
+	@FindBy(id = "capacidadeInput")
+	private WebElement capacidadeInput;
+	@FindBy(id = "observacoesInput")
+	private WebElement observacoesInput;
+	@FindBy(id = "salvarTanque")
+	private WebElement salvarTanque;
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	public TanqueObjetoDePagina(WebDriver driver) throws Exception {
+		super(driver);
+	}
+
+	// METODOS PUBLICOS
+
+	public TanqueObjetoDePagina prepararNovoTanque() throws InterruptedException {
+		btNovoTanque.click();
+		esperaRenderizarMensagemComRegex(TITULO_PAINEL_TANQUE_REGEX);
+		return this;
+	}
+
+	public TanqueObjetoDePagina prepararAlterarTanque(String idTanqueParaAlteracao) throws InterruptedException {
+		new Select(selectTanques).selectByValue(idTanqueParaAlteracao);
+		btAlterarTanque.click();
+		esperaRenderizarMensagemComRegex(TITULO_PAINEL_TANQUE_REGEX);
+		return this;
+	}
+
+	/**
+	 * Serve para...
+	 * 
+	 * @param tanque
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public TanqueObjetoDePagina alterarTanque(Tanque tanque) throws InterruptedException {
+		return alterarTanque(tanque.getNumTanquePosto().toString(), tanque.getProdutoCombustivel().getId().toString(), tanque.getCapacidade()
+				.toString(), tanque.getObservacao());
+	}
+
+	public TanqueObjetoDePagina criarNovoTanque(String numeroTanque, String idProdutoCombustivel, String capacidade, String observacoes)
+			throws InterruptedException {
+		LOG.info("Criando novo tanque.");
+		limpaValoresAnteriores();
+		numTanque.sendKeys(numeroTanque);
+		new Select(produtoCombustivelSelect).selectByValue(idProdutoCombustivel);
+		capacidadeInput.sendKeys(capacidade);
+		observacoesInput.sendKeys(observacoes);
+		salvarTanque.click();
+		esperaRenderizarMensagemComRegex(MENSAGEM_SALVO_SUCESSO_REGEX);
+		return this;
+	}
+
+	public TanqueObjetoDePagina alterarTanque(String numeroTanque, String idProdutoCombustivel, String capacidade, String observacoes)
+			throws InterruptedException {
+		LOG.info("Preparar alterar tanque.");
+		limpaValoresAnteriores();
+		numTanque.sendKeys(numeroTanque);
+		new Select(produtoCombustivelSelect).selectByValue(idProdutoCombustivel);
+		capacidadeInput.sendKeys(capacidade);
+		observacoesInput.sendKeys(observacoes);
+		salvarTanque.click();
+		esperaRenderizarMensagemComRegex(MENSAGEM_SALVO_SUCESSO_REGEX);
+		return this;
+
+	}
+
+	public boolean isTanqueSalvoComSucesso() {
+		return driver.findElement(By.cssSelector("BODY")).getText().matches(MENSAGEM_SALVO_SUCESSO_REGEX);
+	}
+
+	// METODOS PRIVADOS
+
+	/**
+	 * Serve para...
+	 */
+	private void limpaValoresAnteriores() {
+		numTanque.clear();
+		capacidadeInput.clear();
+		observacoesInput.clear();
+	}
+
+	// GETS E SETS
+
+}

@@ -1,0 +1,258 @@
+package br.com.devnagui.project.roteiro.manter;
+
+import static org.junit.Assert.fail;
+
+import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+
+import junit.framework.Assert;
+
+import org.apache.log4j.Logger;
+import org.dbunit.DatabaseUnitException;
+import org.dbunit.database.QueryDataSet;
+import org.dbunit.operation.DatabaseOperation;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.unitils.database.annotations.TestDataSource;
+import org.unitils.dbunit.annotation.DataSet;
+import org.unitils.inject.annotation.InjectIntoByType;
+import org.unitils.inject.annotation.TestedObject;
+import org.unitils.orm.jpa.annotation.JpaEntityManagerFactory;
+
+import br.com.devnagui.project.dbunitils.InsertOrUpdateWithCommitLoadStrategy;
+import br.com.devnagui.project.entities.Roteiro;
+import br.com.devnagui.project.fiscal.manter.ManterFiscalTesteFuncional;
+import br.com.devnagui.project.manager.exception.BusinessException;
+import br.com.devnagui.project.manager.impl.FiscalManagerBean;
+import br.com.devnagui.project.manager.impl.RotaManagerBean;
+import br.com.devnagui.project.manager.impl.RotaVersaoManagerBean;
+import br.com.devnagui.project.manager.impl.UserManagerBean;
+import br.com.devnagui.project.objetodepagina.MenuConvarObjetoDePagina;
+import br.com.devnagui.project.objetodepagina.roteiro.manter.AlterarExcluirRoteiroObjetoDePagina;
+import br.com.devnagui.project.objetodepagina.roteiro.manter.AtribuirRoteiroObjetoDePagina;
+import br.com.devnagui.project.posto.ManterPostoCombustivelSuiteDeTestes;
+
+/**
+ * Classe que controla que agrupa os testes funcionais para a tela de atribuir
+ * roteiros a fiscais.
+ * 
+ * @author 006157C6
+ * 
+ */
+@JpaEntityManagerFactory(configFile = "test-persistence.xml", persistenceUnit = "test-persistence-unit")
+@RunWith(UnitilsJUnit4TestClassRunner.class)
+public class ManterRoteiroTesteFuncional {
+
+    private static final String XML_ROTEIRO = "roteiro.xml";
+
+    /**
+     * Manager para operacoes com fiscal.
+     */
+    private static final Logger LOG = Logger.getLogger(ManterRoteiroTesteFuncional.class);
+
+    /**
+     * Nome do arquivo xml.
+     */
+    private static final String XML_POSTOS_COMBUSTIVEIS_VALIDOS = "postosCombustiveisValidos.xml";
+
+    /**
+     * Nome do arquivo xml.
+     */
+    private static final String XML_ALTERAR_ROTA_COM_ROTA_VERSAO_ATIVA_1_XML = "rotaComVersaoAtiva4Postos.xml";
+
+    /**
+     * Id do fiscal carregado nos testes.
+     */
+    private static final long ID_FISCAL_TESTES = -2L;
+
+    /**
+     * Id da rotaversao carregada nos testes.
+     */
+    private static final long ID_ROTA_VERSAO_TESTES = -1L;
+
+    /**
+     * Manager para operacoes com fiscal.
+     */
+    @TestedObject
+    private FiscalManagerBean fiscalManager;
+
+    /**
+     * Manager para operacoes com fiscal.
+     */
+    @TestedObject
+    @InjectIntoByType(target = "fiscalManager")
+    private UserManagerBean usuarioManager;
+
+    /**
+     * Manager de rota vers�o.
+     */
+    @TestedObject
+    private RotaVersaoManagerBean rotaVersaoManagerBean;
+
+    /**
+     * Manager de rota para ser inserido como dependencia da rota versao.
+     */
+    @TestedObject
+    @InjectIntoByType(target = "rotaVersaoManagerBean")
+    private RotaManagerBean rotaManagerBean;
+
+    /**
+     * Entity manager para ser injetado nos managers.
+     */
+    @InjectIntoByType
+    @PersistenceContext(unitName = "test-persistence-unit")
+    private EntityManager entityManager;
+
+    /**
+     * Data source para opera��es auxiliares dos testes. Ex.: Limpeza de alguns
+     * registros na base, Inser��o, alteral��o, etc.
+     */
+    @TestDataSource
+    private static DataSource dataSource;
+
+    /**
+     * Driver usado para acessar as paginas.
+     */
+    private WebDriver driver;
+
+    /**
+     * Configura o browser e o tempo de resposta.
+     * 
+     * @throws SQLException
+     *             Erro geral SQL.
+     * @throws DatabaseUnitException
+     *             Erro na execucao do dbunit.
+     */
+    @Before
+    public void iniciarTeste() throws DatabaseUnitException, SQLException {
+        LOG.info("Rodando metodo @Before.");
+        driver = new FirefoxDriver();
+        driver.manage().timeouts().implicitlyWait(ManterPostoCombustivelSuiteDeTestes.TEMPO_MAXIMO_TESTE_FUNCIONAL, TimeUnit.SECONDS);
+
+    }
+
+    /**
+     * Configura o browser e o tempo de resposta.
+     * 
+     * @throws SQLException
+     *             Erro geral SQL.
+     * @throws DatabaseUnitException
+     *             Erro na execucao do dbunit.
+     */
+    @org.junit.After
+    public void finalizarTeste() throws DatabaseUnitException, SQLException {
+        LOG.info("Rodando metodo @After.");
+        driver.close();
+        limpaRoteirosAnteriores();
+        limpaFiscalEHistoricoAnterior();
+    }
+
+    /**
+     * Teste funcional para testar a atribuicao de um fiscal a uma rota, criando
+     * um roteiro com sucesso.
+     */
+    @Test
+    @DataSet(value = { ManterFiscalTesteFuncional.INSERIR_FISCAL_HABILITADO_XML, XML_POSTOS_COMBUSTIVEIS_VALIDOS, XML_ALTERAR_ROTA_COM_ROTA_VERSAO_ATIVA_1_XML }, loadStrategy = InsertOrUpdateWithCommitLoadStrategy.class)
+    public void criarNovoRoteiroSucessoTest() {
+        LOG.info("Iniciando teste funcional para testar a atribuicao de um fiscal a uma rota, criando um roteiro com sucesso.");
+        try {
+            MenuConvarObjetoDePagina menuConvar = new MenuConvarObjetoDePagina(driver);
+            menuConvar = menuConvar.chamaPaginaInicial();
+            AtribuirRoteiroObjetoDePagina atribuirRoteiroOP = menuConvar.acionarAtribuirRoteiro();
+            Roteiro novoRoteiroValido = carregaRoteiroTestesValido();
+            atribuirRoteiroOP.atribuirRoteiro(novoRoteiroValido);
+            Assert.assertTrue(atribuirRoteiroOP.isRoteiroAtribuidoComSucesso());
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+            fail();
+        }
+
+        LOG.info("Finalizando teste funcional para testar a atribuicao de um fiscal a uma rota, criando um roteiro com sucesso.");
+    }
+
+    /**
+     * Exclui um roteiro atraves da tela.
+     */
+    @Test
+    @DataSet(value = { ManterFiscalTesteFuncional.INSERIR_FISCAL_HABILITADO_XML, XML_POSTOS_COMBUSTIVEIS_VALIDOS, XML_ALTERAR_ROTA_COM_ROTA_VERSAO_ATIVA_1_XML,
+            XML_ROTEIRO }, loadStrategy = InsertOrUpdateWithCommitLoadStrategy.class)
+    public void excluirRoteiroComSucesso() {
+        try {
+            MenuConvarObjetoDePagina menuConvar = new MenuConvarObjetoDePagina(driver);
+            menuConvar = menuConvar.chamaPaginaInicial();
+            AlterarExcluirRoteiroObjetoDePagina alterarExcluirRoteiroOP = menuConvar.acionarAlterarExcluirRoteiro();
+            alterarExcluirRoteiroOP.excluirRoteiro(carregaRoteiroTestesValido());
+            Assert.assertTrue(alterarExcluirRoteiroOP.isRoteiroExcluidoComSucesso());
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+            fail();
+        }
+    }
+
+    /**
+     * Carrega os dados dos datasets realizar os testes.
+     * 
+     * @return Um roteiro valido.
+     */
+    private Roteiro carregaRoteiroTestesValido() {
+        LOG.info("Carregando novo roteiro valido.");
+        Roteiro retorno = new Roteiro();
+        try {
+            retorno.setRotaVersao(rotaVersaoManagerBean.searchForId(ID_ROTA_VERSAO_TESTES));
+            retorno.setFiscal(fiscalManager.searchForId(ID_FISCAL_TESTES));
+        } catch (BusinessException e) {
+            LOG.error(e);
+        }
+        return retorno;
+    }
+
+    /**
+     * Metodo que limpa os roteiros anteriores.
+     * 
+     * @throws SQLException
+     *             Erro no SQL.
+     * @throws DatabaseUnitException
+     *             Erro na execucao do dbunit.
+     */
+    private void limpaRoteirosAnteriores() throws DatabaseUnitException, SQLException {
+        LOG.info("Limpando roteiros anteriores para a rota e o fiscal dos testes");
+        org.dbunit.ext.oracle.OracleConnection connection = new org.dbunit.ext.oracle.OracleConnection(dataSource.getConnection(), "PROJECT");
+
+        QueryDataSet queryDataSet = new QueryDataSet(connection);
+        queryDataSet.addTable("ROTEIRO", "SELECT RIRO.* FROM PROJECT.ROTEIRO RIRO WHERE RIRO.SEQ_FISCAL = " + ID_FISCAL_TESTES + " OR RIRO.SEQ_ROTA_VERSAO = "
+                + ID_ROTA_VERSAO_TESTES);
+        DatabaseOperation.DELETE.execute(connection, queryDataSet);
+        connection.getConnection().commit();
+    }
+
+    /**
+     * Limpa o historico do fiscal usado nos testes.
+     * 
+     * @throws SQLException
+     *             Erro no SQL.
+     * @throws DatabaseUnitException
+     *             Erro na execucao do dbunit.
+     */
+    private void limpaFiscalEHistoricoAnterior() throws DatabaseUnitException, SQLException {
+        LOG.info("Limpando fiscal e historico anterior");
+        org.dbunit.ext.oracle.OracleConnection connection = new org.dbunit.ext.oracle.OracleConnection(dataSource.getConnection(), "PROJECT");
+
+        QueryDataSet queryDataSet = new QueryDataSet(connection);
+        queryDataSet.addTable("HISTORICO_HABILITA_FISCAL", "SELECT HF.* FROM PROJECT.HISTORICO_HABILITA_FISCAL HF WHERE  HF.SEQ_FISCAL = " + ID_FISCAL_TESTES);
+        DatabaseOperation.DELETE.execute(connection, queryDataSet);
+        connection.getConnection().commit();
+        queryDataSet = new QueryDataSet(connection);
+        queryDataSet.addTable("FISCAL", "SELECT F.* FROM PROJECT.FISCAL F WHERE F.SEQ_FISCAL = " + ID_FISCAL_TESTES);
+        DatabaseOperation.DELETE.execute(connection, queryDataSet);
+        connection.getConnection().commit();
+    }
+
+}

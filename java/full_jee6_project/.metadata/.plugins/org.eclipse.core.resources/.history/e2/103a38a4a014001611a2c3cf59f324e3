@@ -1,0 +1,4 @@
+mail.smtp.roteiro.host=ip
+mail.smtp.roteiro.port=port
+mail.roteiro.from=project@sefaz.ce.gov.br
+mail.charset=utf-8

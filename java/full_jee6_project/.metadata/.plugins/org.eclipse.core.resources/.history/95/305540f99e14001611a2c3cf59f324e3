@@ -1,0 +1,9 @@
+package br.com.devnagui.project.manager;
+
+import br.com.devnagui.project.entities.BandeiraPosto;
+
+public interface BandeiraPostoManager extends GenericoManager<BandeiraPosto> {
+
+	public BandeiraPosto buscarBandeiraPostoPorDescricaoBandeira(String descricao);
+	
+}

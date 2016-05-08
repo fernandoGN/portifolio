@@ -1,0 +1,5 @@
+package br.com.devnagui.project.manager.strategy.factory;
+
+public class StrategyFactory {
+
+}

@@ -1,0 +1,115 @@
+1462651904292	Move 8 resources to 'br.com.devnagui.project'
+1462652005964	Move folders
+1462652013191	Delete element
+1462652045924	Move compilation unit
+1462652140759	Delete element
+1462652324082	Move folders
+1462652328250	Delete element
+1462653113950	Delete element
+1462653739248	Delete element
+1462653927839	Rename type 'GenericoManagerBean'
+1462653937124	Rename field 'classEntidade'
+1462653943505	Rename type variable 'Entidade'
+1462653968672	Rename field 'TOTAL_TUPLAS_PADRAO'
+1462653975102	Rename field 'MAX_RESULT_STANDARD'
+1462653996458	Rename type 'PaginaDTO'
+1462654011213	Rename method 'recuperarDadosPaginados'
+1462654020507	Rename local variable 'paginacao'
+1462654025082	Rename local variable 'pageObject'
+1462654059187	Rename method 'restringirValoresDaPaginaAtual'
+1462654131301	Rename method 'getIndiceInicioDataset'
+1462654141921	Rename local variable 'indiceInicioDataset'
+1462654176711	Rename method 'getTamanhoDaPagina'
+1462654221135	Rename local variable 'entidade'
+1462654225683	Rename local variable 'entidade'
+1462654233236	Rename method 'alterar'
+1462654241953	Rename method 'inserir'
+1462654267038	Rename method 'excluir'
+1462654272326	Rename local variable 'entidade'
+1462654285966	Rename method 'recarregar'
+1462654290880	Rename local variable 'entidade'
+1462654298954	Rename method 'removerDoContexto'
+1462654304955	Rename local variable 'entidade'
+1462654314674	Rename method 'buscar'
+1462654330852	Rename method 'buscarTodos'
+1462654350983	Rename method 'obterListaPaginadaSimples'
+1462654379514	Rename method 'obterQuantidadeTotalRegistros'
+1462654500428	Rename local variable 'quantidadeTotalRegistros'
+1462654510385	Rename method 'setTotalRegistros'
+1462654521552	Rename local variable 'paginacao'
+1462654528084	Rename local variable 'dadosPaginados'
+1462654805736	Rename method 'construirOrderBy'
+1462654823065	Rename method 'inicializarObjetoOuColecao'
+1462654856053	Rename method 'construirCondicoesWhere'
+1462654920456	Rename local variable 'paginacao'
+1462654928489	Rename local variable 'entidadeRoot'
+1462654942058	Rename local variable 'builder'
+1462655003046	Rename local variable 'quantidadeTotalRegistros'
+1462655010077	Rename local variable 'entidadeRoot'
+1462655015084	Rename local variable 'entidadeRoot'
+1462655022162	Rename local variable 'paginacao'
+1462658012598	Delete elements
+1462658022246	Delete elements
+1462658042319	Delete elements
+1462658088559	Delete elements
+1462658131281	Delete elements
+1462658237550	Delete elements
+1462658249094	Delete element
+1462658258657	Delete element
+1462658271061	Delete element
+1462658282662	Delete element
+1462658285776	Delete element
+1462658289670	Delete element
+1462658370158	Delete elements
+1462658377431	Delete elements
+1462658380623	Delete elements
+1462658383708	Delete elements
+1462658388762	Delete elements
+1462658402026	Delete element
+1462658464747	Delete element
+1462658475275	Delete element
+1462658495045	Delete element
+1462658540922	Delete element
+1462658552312	Delete element
+1462658567145	Delete elements
+1462658574289	Delete elements
+1462658660702	Delete element
+1462658663262	Delete element
+1462658667950	Delete element
+1462658671266	Delete element
+1462658756651	Delete element
+1462658760898	Delete element
+1462658762489	Delete element
+1462658768326	Delete elements
+1462658856093	Delete element
+1462658857397	Delete element
+1462658861020	Delete element
+1462658863075	Delete element
+1462658864609	Delete element
+1462659021993	Delete element
+1462659024687	Delete element
+1462659037532	Delete element
+1462659178585	Delete element
+1462659205783	Delete element
+1462659258091	Rename type 'ConvarCoreSuiteDeTestes'
+1462659393427	Rename local variable 'usuarioBuscado'
+1462659409541	Rename method 'obterUsuariosPorMatriculaOuNome'
+1462659432238	Rename method 'obterUsuarioPorMatriculaNome'
+1462659475678	Rename method 'getUserBy'
+1462659489088	Rename method 'getUserByName'
+1462659504573	Rename method 'validarUsuario'
+1462659517307	Rename method 'validarCamposUsuario'
+1462659535825	Rename method 'validarUsuarioExiste'
+1462659578696	Rename method 'itExists'
+1462659600805	Rename type 'Usuario'
+1462659692412	Rename type 'UsuarioManager'
+1462659700782	Rename type 'GenericoManager'
+1462659726356	Rename type 'UsuarioManagerBean'
+1462659815255	Delete element
+1462659846389	Rename type 'GenericManagerBean'
+1462659852861	Rename type 'GenericManager'
+1462659886886	Rename type 'UserManager'
+1462659909669	Rename type 'UserManagerBean'
+1462659921926	Rename type 'GenericBusinessBean'
+1462659961055	Delete elements
+1462659973328	Delete element

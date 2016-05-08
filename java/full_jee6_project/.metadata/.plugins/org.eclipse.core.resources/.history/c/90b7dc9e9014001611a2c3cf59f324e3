@@ -1,0 +1,15 @@
+package br.gov.ce.sefaz.project.manager.impl;
+
+import javax.ejb.Stateless;
+
+import org.apache.log4j.Logger;
+
+import br.gov.ce.sefaz.project.entities.VisitaNfe;
+import br.gov.ce.sefaz.project.manager.VisitaNfeManager;
+
+@Stateless
+public class VisitaNfeManagerBean extends GenericoManagerBean<VisitaNfe> implements VisitaNfeManager{
+	private static final long serialVersionUID = 1177814688300465248L;
+
+	private static final Logger LOG = Logger.getLogger(VisitaNfeManagerBean.class);
+}

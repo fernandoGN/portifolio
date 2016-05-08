@@ -1,0 +1,156 @@
+package br.com.devnagui.project.entities;
+
+import java.io.Serializable;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import br.com.devnagui.project.enums.SituacaoRegistroItem;
+
+@Entity
+@Table(name = "ITEM_NFE_ENTRADA", schema = "PROJECT")
+@NamedQueries(value = { @NamedQuery(name = ItemNFEEntrada.QUERY_OBTER_ITENS_DA_NOTA, query = "select item from ItemNFEEntrada item where item.notaFiscal.codAcesso = :codAcesso"),
+		 @NamedQuery(name = ItemNFEEntrada.QUERY_OBTER_ITENS_DA_NOTA_POR_VISITA, query = "select item from ItemNFEEntrada item where item.visita.id =:idVisita"),
+		 @NamedQuery(name = ItemNFEEntrada.QUERY_DELETAR_ITENS_NOTA_FISCAL_POR_VISITA, query = "delete from ItemNFEEntrada item where item.visita.id =:idVisita"),
+	      @NamedQuery(name = ItemNFEEntrada.QUERY_DELETAR_ITENS_NOTA_FISCAL_POR_VISITA_NFE, query = "delete from ItemNFEEntrada item where item.visita.id =:idVisita and item.notaFiscal.id = :idNota"),
+	      @NamedQuery(name = ItemNFEEntrada.QUERY_OBTER_SOMATORIO_VOLUME_ENTRADA_COMBUSTIVEL_POR_NFE, query = "select new br.com.devnagui.project.vo.SomatorioVolumeEntradaPorProdutoCombustivelVO(item.produtoCombustivel, SUM(item.qtdEntrada)) from ItemNFEEntrada item where item.visita.id =:idVisita and item.produtoCombustivel.id = :idCombustivel group by item.produtoCombustivel.id")
+
+})
+public class ItemNFEEntrada implements Serializable {
+
+    /**
+     * Serial UID.
+     */
+    private static final long serialVersionUID = 8329480597072725280L;
+    public static final String QUERY_OBTER_ITENS_DA_NOTA = "queryObterItensDaNota";
+    
+    public static final String QUERY_OBTER_ITENS_DA_NOTA_POR_VISITA = "obterItensDaNotaPorVisita";
+    
+    public static final String QUERY_OBTER_SOMATORIO_VOLUME_ENTRADA_COMBUSTIVEL_POR_NFE = "queryObterSomatorioVolumeCombustivelPorItemNFe";
+
+    
+    public static final String QUERY_DELETAR_ITENS_NOTA_FISCAL_POR_VISITA = "deletarItensNotaFiscalPorVisita";
+    public static final String QUERY_DELETAR_ITENS_NOTA_FISCAL_POR_VISITA_NFE = "deletarItensNotaFiscalPorVisitaNFe";
+
+    @Id
+    @Column(name = "SEQ_ITEM_NFE_ENTRADA")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_ITEM_NFE_ENTRADA")
+    @SequenceGenerator(name = "SQ_ITEM_NFE_ENTRADA", sequenceName = "SQ_ITEM_NFE_ENTRADA", allocationSize = 1, initialValue = 1, schema = "PROJECT")
+    private Long id;
+    
+    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST,CascadeType.REFRESH,CascadeType.DETACH})
+    @JoinColumn(name="SEQ_NFE_ENTRADA")
+    private NFEEntrada notaFiscal;
+    
+    @ManyToOne(cascade={CascadeType.MERGE,CascadeType.PERSIST,CascadeType.REFRESH,CascadeType.DETACH})
+    @JoinColumn(name="SEQ_VISITA")
+    private Visita visita;
+    
+    @ManyToOne()
+    @JoinColumn(name="SEQ_PRODUTO_COMBUSTIVEL",nullable=false)
+    private ProdutoCombustivel produtoCombustivel;
+    
+    @Column(name="NUM_ITEM_NF", precision=3,scale=0,nullable=false)
+    private Long numItemNFE;
+    
+    @Column(name="QTD_ITEM_ENTRADA", precision=6, scale=0, nullable=false)
+    private Long qtdEntrada;
+    
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name="STA_REGISTRO_ITEM",nullable=false)
+    private SituacaoRegistroItem situacaoItem;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getNumItemNFE() {
+        return numItemNFE;
+    }
+
+    public void setNumItemNFE(Long numItemNFE) {
+        this.numItemNFE = numItemNFE;
+    }
+
+    public Long getQtdEntrada() {
+        return qtdEntrada;
+    }
+
+    public void setQtdEntrada(Long qtdEntrada) {
+        this.qtdEntrada = qtdEntrada;
+    }
+
+    public SituacaoRegistroItem getSituacaoItem() {
+        return situacaoItem;
+    }
+
+    public void setSituacaoItem(SituacaoRegistroItem situacaoItem) {
+        this.situacaoItem = situacaoItem;
+    }
+
+    public NFEEntrada getNotaFiscal() {
+        return notaFiscal;
+    }
+
+    public void setNotaFiscal(NFEEntrada notaFiscal) {
+        this.notaFiscal = notaFiscal;
+    }
+    
+    public Visita getVisita() {
+        return visita;
+    }
+
+    public void setVisita(Visita visita) {
+        this.visita = visita;
+    }
+
+    public ProdutoCombustivel getProdutoCombustivel() {
+        return produtoCombustivel;
+    }
+
+    public void setProdutoCombustivel(ProdutoCombustivel produtoCombustivel) {
+        this.produtoCombustivel = produtoCombustivel;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!(obj instanceof ItemNFEEntrada))
+            return false;
+        ItemNFEEntrada other = (ItemNFEEntrada) obj;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        return true;
+    }
+    
+}

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns="SISSEG" targetNamespace="SISSEG">
-	<xsd:element name="USUARIO" type="USUARIO__type" />
-	<xsd:complexType name="USUARIO__type">
-		<xsd:attribute name="SEQ_USUARIO" use="optional" />
-		<xsd:attribute name="NOM_USUARIO" use="optional" />
-		<xsd:attribute name="NUM_MATRICULA" use="optional" />
-	</xsd:complexType>
-</xsd:schema>

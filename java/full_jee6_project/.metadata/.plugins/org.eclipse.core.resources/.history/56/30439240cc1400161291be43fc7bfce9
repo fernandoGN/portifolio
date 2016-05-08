@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:a="PROJECT" xmlns:b="CADASTRO">
-	<!-- datas no formato yyyy-mm-dd -->
-		
-		<!-- O numero da bomba deveria ser -3,porem o selenium nao consegue escrever -3 na tela -->
-	<bomba SEQ_BOMBA="-3" SEQ_POSTO_COMBUSTIVEL="-99"
-		NUM_BOMBA_POSTO="-33" TIP_MEDICAO_BOMBA="1" TXT_OBSERVACAO_BOMBA="Bomba dos testes funcionais alterada!" />
-</dataset>

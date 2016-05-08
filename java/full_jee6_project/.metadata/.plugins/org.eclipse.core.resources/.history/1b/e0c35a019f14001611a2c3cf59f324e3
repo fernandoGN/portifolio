@@ -1,7 +1,0 @@
-package br.com.devnagui.project.manager;
-
-import br.com.devnagui.project.entities.VisitaNfe;
-
-public interface VisitaNfeManager extends GenericoManager<VisitaNfe> {
-
-}

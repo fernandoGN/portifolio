@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><testrun name="UserBusinessEJBTest" project="project-core" tests="4" started="4" failures="0" errors="0" ignored="0">
-  <testsuite name="br.com.devnagui.project.user.UserBusinessEJBTest" time="0.378">
-    <testcase name="testGetRegistrationUserErrorNotExisting" classname="br.com.devnagui.project.user.UserBusinessEJBTest" time="0.373"/>
-    <testcase name="testGetRegistrationUserSucess" classname="br.com.devnagui.project.user.UserBusinessEJBTest" time="0.002"/>
-    <testcase name="testGetUserByRegistrationNumberOrName" classname="br.com.devnagui.project.user.UserBusinessEJBTest" time="0.001"/>
-    <testcase name="testValidateUserSucess" classname="br.com.devnagui.project.user.UserBusinessEJBTest" time="0.002"/>
-  </testsuite>
-</testrun>

@@ -1,5 +1,0 @@
-package br.gov.ce.sefaz.project.manager.strategy.factory;
-
-public class StrategyFactory {
-
-}

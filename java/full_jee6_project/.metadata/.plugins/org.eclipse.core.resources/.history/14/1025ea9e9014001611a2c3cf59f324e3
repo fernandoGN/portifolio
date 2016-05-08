@@ -1,7 +1,0 @@
-package br.gov.ce.sefaz.project.manager;
-
-import br.gov.ce.sefaz.project.entities.VisitaNfe;
-
-public interface VisitaNfeManager extends GenericoManager<VisitaNfe> {
-
-}

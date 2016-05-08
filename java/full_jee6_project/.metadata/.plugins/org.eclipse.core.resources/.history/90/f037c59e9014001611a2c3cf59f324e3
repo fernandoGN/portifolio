@@ -1,9 +1,0 @@
-package br.gov.ce.sefaz.project.manager;
-
-import br.gov.ce.sefaz.project.entities.BandeiraPosto;
-
-public interface BandeiraPostoManager extends GenericoManager<BandeiraPosto> {
-
-	public BandeiraPosto buscarBandeiraPostoPorDescricaoBandeira(String descricao);
-	
-}

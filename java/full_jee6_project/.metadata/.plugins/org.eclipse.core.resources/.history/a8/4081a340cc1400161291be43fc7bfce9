@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:project="PROJECT">
-	<!-- datas no formato yyyy-mm-dd -->
-
-	<project:roteiro SEQ_ROTEIRO="-1"
-		SEQ_ROTA_VERSAO="-1" SEQ_FISCAL="-2"
-		DAT_INI="2013-05-24" DAT_FIM="2013-06-24"  />
-		
-</dataset>

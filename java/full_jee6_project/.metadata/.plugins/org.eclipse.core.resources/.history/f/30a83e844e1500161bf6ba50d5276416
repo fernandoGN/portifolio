@@ -1,8 +1,0 @@
-package br.com.devnagui.project.paginacao;
-
-import org.openqa.selenium.WebDriver;
-
-public interface RichfacesActionHandler {
-
-    void executeAction( WebDriver driver,String idColunaDeAcao);
-}

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:a="PROJECT" xmlns:b="CADASTRO">
-	<!-- datas no formato yyyy-mm-dd -->
-	<lacre_bomba SEQ_LACRE_BOMBA="-3" SEQ_BOMBA="-3" NUM_LACRE="-1" DAT_APLICACAO="2013-01-01" />
-</dataset>

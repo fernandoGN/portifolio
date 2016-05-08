@@ -1,8 +1,0 @@
-package br.com.devnagui.project.paginacao;
-
-import org.openqa.selenium.WebDriver;
-
-public interface ExecutadorDeAcaoTabelaRichfacesHandler {
-
-    void realizarAcao( WebDriver driver,String idColunaDeAcao);
-}

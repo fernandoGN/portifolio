@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:project="PROJECT">
-	<!-- datas no formato yyyy-mm-dd -->
-
-	<project:MEDICAO_TANQUE SEQ_MEDICAO_TANQUE="999"
-		SEQ_VISITA="1" SEQ_TANQUE="-3" 
-		QTD_VOLUME_MEDIDO="12"/>
-		
-</dataset>

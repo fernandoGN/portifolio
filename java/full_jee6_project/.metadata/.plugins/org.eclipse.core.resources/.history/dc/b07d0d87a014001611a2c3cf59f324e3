@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:project="PROJECT">
-	<!-- datas no formato yyyy-mm-dd -->
-
-	<project:COMBUSTIVEL_VISITA SEQ_COMBUSTIVEL_VISITA="3"
-		SEQ_VISITA="1" SEQ_PRODUTO_COMBUSTIVEL="16" 
-		DAT_REGISTRO_COMBUSTIVEL="2013-06-17" />
-		
-</dataset>

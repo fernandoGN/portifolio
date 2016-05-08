@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-		<tanque SEQ_TANQUE="-4" SEQ_POSTO_COMBUSTIVEL="-99"
-		SEQ_PRODUTO_COMBUSTIVEL="13" NUM_TANQUE_POSTO="2" QTD_CAPACIDADE="992"
-		TXT_OBSERVACAO_TANQUE="tanque 2 dos testes" />
-</dataset>
